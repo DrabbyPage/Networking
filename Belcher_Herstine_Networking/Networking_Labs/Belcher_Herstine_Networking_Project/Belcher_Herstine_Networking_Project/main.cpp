@@ -9,7 +9,7 @@
 //#define SERVER_PORT 60000
 
 unsigned int maxClients = 2;
-unsigned short serverPort;
+unsigned short serverPort = 2;
 
 using namespace RakNet;
 
