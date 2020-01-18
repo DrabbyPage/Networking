@@ -123,8 +123,36 @@ int main(void)
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
 			}
+
+			if (isServer)
+			{
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+//				fgets(str, 512, stdin);
+				if (str[0] == 'A' || str[0] == 'a')
+				{
+					printf("we in \n");
+					bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+					bsOut.Write("Youre a bitch");
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+			}
+			else
+			{
+				printf("Please enter a message:\n");
+				fgets(str, 512, stdin);
+				if (GetKeyState(VK_RETURN))
+				{
+					printf(str);
+					RakNet::BitStream bsOut;
+					bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+					printf("message sent:");
+					bsOut.Write(str);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+			}
 		}
-		
+
 
 	}
 
