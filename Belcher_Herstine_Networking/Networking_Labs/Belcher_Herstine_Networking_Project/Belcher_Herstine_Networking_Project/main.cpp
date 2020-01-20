@@ -15,7 +15,28 @@ struct Client
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	const char* message;
+	char message[10] = { 'h', 'e', 'w', 'w', 'o' };
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct Participant
+{
+	unsigned char typeId; // Your type here
+	// Your data here
+	char name[12] = {};
+	char message[120] = {};
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct Host
+{
+	unsigned char typeId; // Your type here
+	// Your data here
+	char userName[12] = {};
+	char messageText[120] = {};
+	bool privateMsg = false;
 };
 #pragma pack(pop)
 
@@ -28,25 +49,25 @@ unsigned short serverPort = 600;
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1=ID_USER_PACKET_ENUM+1
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
 };
 
 
 
-unsigned char GetPacketIdentifier(Packet *p)
+unsigned char GetPacketIdentifier(Packet* p)
 {
 	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
-		return (unsigned char) p->data[sizeof(unsigned char) + sizeof(unsigned long)];
+		return (unsigned char)p->data[sizeof(unsigned char) + sizeof(unsigned long)];
 	else
-		return (unsigned char) p->data[0];
+		return (unsigned char)p->data[0];
 }
 
 // Put this anywhere you want.  Inside the state class that handles the game is a good place
-void DoMyPacketHandler(Packet *packet)
+void DoMyPacketHandlerClient(Packet* packet)
 {
 	// Cast the data to the appropriate type of struct
-	Client *s = (Client *) packet->data;
-	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+	Client* s = (Client*)packet->data;
+	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
 	if (packet->length != sizeof(Client))
 	{
 		return;
@@ -61,18 +82,22 @@ void DoMyPacketHandler(Packet *packet)
 
 int main(void)
 {
-	Client temp;
-	temp.message = "hewwo";
-	temp.typeId = ID_GAME_MESSAGE_1;
+	//Client temp;
+	//temp.typeId = ID_GAME_MESSAGE_1;
+	char tempName[12];
+	printf("Please enter you name (must be within 12 Characters):\n");
+	fgets(tempName, 12, stdin);
+
+	// get key state and then addd the state of teh key board to an array for messaging
 
 	char str[512];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 	bool isServer;
 	RakNet::Packet* packet;
 
-	printf("(C) or (S)erver?\n");
+	printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
 	fgets(str, 512, stdin);
-	if ((str[0] == 'c') || (str[0] == 'C'))
+	if ((str[0] == 'j') || (str[0] == 'J'))
 	{
 		SocketDescriptor sd;
 		peer->Startup(1, &sd, 1);
@@ -88,14 +113,14 @@ int main(void)
 
 	if (isServer)
 	{
-		printf("Starting the server.\n");
+		printf("Starting the chat room.\n");
 		// We need to let the server accept incoming connections from the clients
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
 	else {
 		printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
-		if (str[0] == 0) {
+		if (str[0] == 10) {
 			strcpy(str, "127.0.0.1");
 		}
 		printf("Starting the client.\n");
@@ -125,13 +150,13 @@ int main(void)
 
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-				RakNet::BitStream bsOut;
+				//RakNet::BitStream bsOut;
 
 				//WriteStringToBitStream(temp.message, &bsOut);
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				//bsOut.Write(temp.typeId);
 				//bsOut.Write(temp.message);
-				peer->Send((const char*)& temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				//peer->Send((const char*)& temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				//peer->Send(&bsOut,HIGH_PRIORITY,RELIABLE_ORDERED,0,packet->systemAddress,true);
 				//RakNet::BitStream bsOut;
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
@@ -142,14 +167,14 @@ int main(void)
 				printf("A connection is incoming.\n");
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
-				printf("The server is full.\n");
+				printf("The chat room is full.\n");
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
 				if (isServer) {
 					printf("A client has disconnected.\n");
 				}
 				else {
-					printf("We have been disconnected.\n");
+					printf("We have been disconnected from the host.\n");
 				}
 				break;
 			case ID_CONNECTION_LOST:
@@ -157,27 +182,32 @@ int main(void)
 					printf("A client lost the connection.\n");
 				}
 				else {
-					printf("Connection lost.\n");
+					printf("Connection to the room has been lost.\n");
 				}
 				break;
 
 			case ID_GAME_MESSAGE_1:
 			{
-				
+
 				printf("I am in game message\n");
 
 				if (GetPacketIdentifier(packet) == ID_GAME_MESSAGE_1/* User assigned packet identifier here */)
 				{
-					DoMyPacketHandler(packet);
+					//DoMyPacketHandlerClient(packet);
 				}
-//				RakNet::RakString rs;
-//				RakNet::BitStream bsIn(packet->data, packet->length, true);
-//				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-//				bsIn.Read(rs);
-//				printf("%s\n", rs.C_String());
-//
-//				RakNet::BitStream bsOut;
-//				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				//				RakNet::RakString rs;
+				//				RakNet::BitStream bsIn(packet->data, packet->length, true);
+				//				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//				bsIn.Read(rs);
+				//				printf("%s\n", rs.C_String());
+				//
+				//				RakNet::BitStream bsOut;
+				//				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+
+				if (isServer)
+				{
+
+				}
 
 			}
 			break;
