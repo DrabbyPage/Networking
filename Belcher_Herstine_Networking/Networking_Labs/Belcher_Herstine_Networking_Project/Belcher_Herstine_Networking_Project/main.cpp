@@ -15,7 +15,7 @@ struct Client
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	char message[5] = {'h', 'e', 'w', 'w', 'o'};
+	char message[10] = {'h', 'e', 'w', 'w', 'o'};
 };
 #pragma pack(pop)
 
