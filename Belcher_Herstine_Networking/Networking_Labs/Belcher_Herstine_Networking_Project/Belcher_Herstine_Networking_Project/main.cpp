@@ -15,7 +15,7 @@ struct Client
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	const char* message;
+	char message[5] = {'h', 'e', 'w', 'w', 'o'};
 };
 #pragma pack(pop)
 
@@ -46,7 +46,7 @@ void DoMyPacketHandler(Packet *packet)
 {
 	// Cast the data to the appropriate type of struct
 	Client *s = (Client *) packet->data;
-	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
 	if (packet->length != sizeof(Client))
 	{
 		return;
@@ -62,7 +62,6 @@ void DoMyPacketHandler(Packet *packet)
 int main(void)
 {
 	Client temp;
-	temp.message = "hewwo";
 	temp.typeId = ID_GAME_MESSAGE_1;
 
 	char str[512];
@@ -95,7 +94,7 @@ int main(void)
 	else {
 		printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
-		if (str[0] == 0) {
+		if (str[0] == 10) {
 			strcpy(str, "127.0.0.1");
 		}
 		printf("Starting the client.\n");
