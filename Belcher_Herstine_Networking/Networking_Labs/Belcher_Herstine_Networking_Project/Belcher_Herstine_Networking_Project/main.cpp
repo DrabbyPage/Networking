@@ -24,8 +24,8 @@ struct Participant
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	char name[12] = {};
-	char message[120] = {};
+	char name[12];
+	char message[120];
 };
 #pragma pack(pop)
 
@@ -34,8 +34,8 @@ struct Host
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	char userName[12] = {};
-	char messageText[120] = {};
+	char userName[12];
+	char messageText[120];
 	bool privateMsg = false;
 };
 #pragma pack(pop)
@@ -84,10 +84,13 @@ int main(void)
 {
 	//Client temp;
 	//temp.typeId = ID_GAME_MESSAGE_1;
+
 	char tempName[12];
 	printf("Please enter you name (must be within 12 Characters):\n");
 	fgets(tempName, 12, stdin);
 
+	Host host;
+	Participant participant;
 	// get key state and then addd the state of teh key board to an array for messaging
 
 	char str[512];
@@ -102,18 +105,29 @@ int main(void)
 		SocketDescriptor sd;
 		peer->Startup(1, &sd, 1);
 		isServer = false;
+		for (int i = 0; i < 12; i++)
+		{
+			participant.name[i] = tempName[i];
+		}
 	}
 	else {
 		SocketDescriptor sd(serverPort, 0);
 		peer->Startup(maxClients, &sd, 1);
 		isServer = true;
+
+		for (int i = 0; i < 12; i++)
+		{
+			host.userName[i] = tempName[i];
+		}
 	}
 
 
 
 	if (isServer)
 	{
-		printf("Starting the chat room.\n");
+		printf("Starting the chat room for ");
+		printf(&host.userName[0]);
+		printf(".\n");
 		// We need to let the server accept incoming connections from the clients
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
@@ -123,9 +137,10 @@ int main(void)
 		if (str[0] == 10) {
 			strcpy(str, "127.0.0.1");
 		}
-		printf("Starting the client.\n");
+		printf("Connecting to the chat room for ");
+		printf(&participant.name[0]);
+		printf(".\n");
 		peer->Connect(str, serverPort, 0, 0);
-
 	}
 
 	// TODO - Add code body here
