@@ -26,6 +26,35 @@ struct Participant
 	// Your data here
 	char name[12];
 	char message[120];
+
+	void AddToParticipantMsg(char newChar)
+	{
+		for (int i = 0; i < 120; i++)
+		{
+			if (message[i] == NULL)
+			{
+				message[i] = newChar;
+				break;
+			}
+		}
+	}
+
+	void DeleteParticipantLastCharOfMsg()
+	{
+		for (int i = 0; i < 120; i++)
+		{
+			if (message[i] == NULL && i != 0)
+			{
+				message[i - 1] = NULL;
+				break;
+			}
+			else if (i == 119)
+			{
+				message[119] = NULL;
+				break;
+			}
+		}
+	}
 };
 #pragma pack(pop)
 
@@ -37,6 +66,35 @@ struct Host
 	char userName[12];
 	char messageText[120];
 	bool privateMsg = false;
+
+	void AddToHostMsg(char newChar)
+	{
+		for (int i = 0; i < 120; i++)
+		{
+			if (messageText[i] == NULL)
+			{
+				messageText[i] = newChar;
+				break;
+			}
+		}
+	}
+
+	void DeleteHostLastCharOfMsg()
+	{
+		for (int i = 0; i < 120; i++)
+		{
+			if (messageText[i] == NULL && i != 0)
+			{
+				messageText[i - 1] = NULL;
+				break;
+			}
+			else if (i == 119)
+			{
+				messageText[119] = NULL;
+				break;
+			}
+		}
+	}
 };
 #pragma pack(pop)
 
@@ -232,45 +290,8 @@ int main(void)
 				break;
 			}
 
-			//			if (isServer)
-			//			{
-			//				RakNet::BitStream bsOut;
-			//				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-			//
-			//				printf("I am the server");
-			//
-			//				if (GetPacketIdentifier(packet) == ID_GAME_MESSAGE_1/* User assigned packet identifier here */)
-			//				{
-			//					DoMyPacketHandler(packet);
-			//				}
-			//				//	fgets(str, 512, stdin);
-			//				if (str[0] == 'A' || str[0] == 'a')
-			//				{
-			//					printf("we in \n");
-			//					bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-			//					bsOut.Write("Youre a bitch");
-			//					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-			//				}
-			//			}
-			//			else
-			//			{
-			//
-			//				printf("Please press enter:\n");
-			//
-			//				fgets(str, 512, stdin);
-			//
 			//				if (GetKeyState(VK_RETURN))
-			//				{
-			//					RakNet::BitStream bsOut;
-			//
-			//					//WriteStringToBitStream(temp.message, &bsOut);
-			//					//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-			//					//bsOut.Write(temp.typeId);
-			//					//bsOut.Write(temp.message);
-			//					peer->Send((const char*)& temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-			//					//peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-			//				}
-			//			}
+
 		}
 
 
