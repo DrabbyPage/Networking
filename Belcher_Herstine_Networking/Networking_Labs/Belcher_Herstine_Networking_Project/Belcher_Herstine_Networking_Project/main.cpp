@@ -116,7 +116,7 @@ enum GameMessages
 unsigned char GetPacketIdentifier(Packet* p);
 void DoMyPacketHandlerClient(Packet* packet);
 void GetInput(char msg[]);
-
+void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
 
 int main(void)
 {
@@ -285,11 +285,20 @@ int main(void)
 
 void GetInput(char tempMsg[])
 {
+	std::cout<<GetAsyncKeyState('A');
+
+	bool canTypeLetter = false;
+
+
 	for (char key = 'a'; key <= 'z'; key++)
 	{
-		printf(&key);
-		CheckKeyInput(GetKeyState(key), key, tempMsg);
+		CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
 	}
+	for (char key = 'A'; key <= 'Z'; key++)
+	{
+		CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
+	}
+
 }
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
 {
@@ -299,6 +308,7 @@ void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
 		{
 			if (msg[i] == NULL)
 			{
+				std::cout << charUsed;
 				msg[i] = charUsed;
 				break;
 			}
