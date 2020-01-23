@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <conio.h>
 #include "RakNet/RakPeerInterface.h"
 #include "Raknet/MessageIdentifiers.h"
 #include "Raknet/BitStream.h"
@@ -107,36 +108,14 @@ unsigned short serverPort = 600;
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
+	ID_KEYBOARD_INPUT = ID_USER_PACKET_ENUM + 2
 };
 
+unsigned char GetPacketIdentifier(Packet* p);
+void DoMyPacketHandlerClient(Packet* packet);
 
 
-unsigned char GetPacketIdentifier(Packet* p)
-{
-	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
-		return (unsigned char)p->data[sizeof(unsigned char) + sizeof(unsigned long)];
-	else
-		return (unsigned char)p->data[0];
-}
-
-// Put this anywhere you want.  Inside the state class that handles the game is a good place
-void DoMyPacketHandlerClient(Packet* packet)
-{
-	// Cast the data to the appropriate type of struct
-	Client* s = (Client*)packet->data;
-	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
-	if (packet->length != sizeof(Client))
-	{
-		return;
-	}
-	else
-	{
-		printf(s->message);
-	}
-
-	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
-}
 
 int main(void)
 {
@@ -277,10 +256,7 @@ int main(void)
 				//				RakNet::BitStream bsOut;
 				//				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 
-				if (isServer)
-				{
-
-				}
+				
 
 			}
 			break;
@@ -302,4 +278,40 @@ int main(void)
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;
+}
+
+void GetInput()
+{
+	while (_kbhit())
+	{
+		char input = _getch()
+			//do stuff with string
+	}
+}
+}
+
+unsigned char GetPacketIdentifier(Packet* p)
+{
+	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
+		return (unsigned char)p->data[sizeof(unsigned char) + sizeof(unsigned long)];
+	else
+		return (unsigned char)p->data[0];
+}
+
+// Put this anywhere you want.  Inside the state class that handles the game is a good place
+void DoMyPacketHandlerClient(Packet* packet)
+{
+	// Cast the data to the appropriate type of struct
+	Client* s = (Client*)packet->data;
+	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+	if (packet->length != sizeof(Client))
+	{
+		return;
+	}
+	else
+	{
+		printf(s->message);
+	}
+
+	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
