@@ -109,12 +109,13 @@ unsigned short serverPort = 600;
 enum GameMessages
 {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_KEYBOARD_INPUT = ID_USER_PACKET_ENUM + 2
+	ID_KEYBOARD_INPUT = ID_USER_PACKET_ENUM + 2,
+	ID_BROADCAST_MESSAGE_TO_CLIENTS = ID_USER_PACKET_ENUM + 3
 };
 
 unsigned char GetPacketIdentifier(Packet* p);
 void DoMyPacketHandlerClient(Packet* packet);
-
+void GetInput(char msg[]);
 
 
 int main(void)
@@ -180,9 +181,19 @@ int main(void)
 		peer->Connect(str, serverPort, 0, 0);
 	}
 
+
 	// TODO - Add code body here
 	while (1)
 	{
+		if (isServer)
+		{
+			GetInput(host.messageText);
+		}
+		else
+		{
+			GetInput(participant.message);
+		}
+
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -197,9 +208,8 @@ int main(void)
 				printf("Another client has connected.\n");
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
-			{
-				printf("Our connection request has been accepted.\n");
 
+				printf("Our connection request has been accepted.\n");
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 				//RakNet::BitStream bsOut;
@@ -208,13 +218,14 @@ int main(void)
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				//bsOut.Write(temp.typeId);
 				//bsOut.Write(temp.message);
-				//peer->Send((const char*)& temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				participant.typeId = ID_KEYBOARD_INPUT;
+				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				//peer->Send(&bsOut,HIGH_PRIORITY,RELIABLE_ORDERED,0,packet->systemAddress,true);
 				//RakNet::BitStream bsOut;
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				//bsOut.Write("Clients have entered server");
-			}
-			break;
+
+				break;
 			case ID_NEW_INCOMING_CONNECTION:
 				printf("A connection is incoming.\n");
 				break;
@@ -239,7 +250,7 @@ int main(void)
 				break;
 
 			case ID_GAME_MESSAGE_1:
-			{
+
 
 				printf("I am in game message\n");
 
@@ -247,20 +258,12 @@ int main(void)
 				{
 					//DoMyPacketHandlerClient(packet);
 				}
-				//				RakNet::RakString rs;
-				//				RakNet::BitStream bsIn(packet->data, packet->length, true);
-				//				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-				//				bsIn.Read(rs);
-				//				printf("%s\n", rs.C_String());
-				//
-				//				RakNet::BitStream bsOut;
-				//				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 
-				
 
-			}
-			break;
+				break;
+			case ID_BROADCAST_MESSAGE_TO_CLIENTS:
 
+				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
@@ -280,14 +283,27 @@ int main(void)
 	return 0;
 }
 
-void GetInput()
+void GetInput(char tempMsg[])
 {
-	while (_kbhit())
+	for (char key = 'a'; key <= 'z'; key++)
 	{
-		char input = _getch()
-			//do stuff with string
+		printf(&key);
+		CheckKeyInput(GetKeyState(key), key, tempMsg);
 	}
 }
+void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
+{
+	if (keyPressed)
+	{
+		for (int i = 0; i < 256; i++)
+		{
+			if (msg[i] == NULL)
+			{
+				msg[i] = charUsed;
+				break;
+			}
+		}
+	}
 }
 
 unsigned char GetPacketIdentifier(Packet* p)
