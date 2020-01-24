@@ -11,6 +11,14 @@
 using namespace RakNet;
 using namespace std;
 
+unsigned int maxClients = 1;
+unsigned short serverPort = 600;
+
+bool canTypeMessage = true;
+
+const int maxCharInMessage = 250;
+const int maxCharInName = 12;
+
 #pragma pack(push, 1)
 struct Client
 {
@@ -25,12 +33,12 @@ struct Participant
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	char name[12];
-	char message[120];
+	char name[maxCharInName];
+	char message[maxCharInMessage];
 
 	void AddToParticipantMsg(char newChar)
 	{
-		for (int i = 0; i < 120; i++)
+		for (int i = 0; i < maxCharInMessage; i++)
 		{
 			if (message[i] == NULL)
 			{
@@ -42,16 +50,16 @@ struct Participant
 
 	void DeleteParticipantLastCharOfMsg()
 	{
-		for (int i = 0; i < 120; i++)
+		for (int i = 0; i < maxCharInMessage; i++)
 		{
 			if (message[i] == NULL && i != 0)
 			{
 				message[i - 1] = NULL;
 				break;
 			}
-			else if (i == 119)
+			else if (i == maxCharInMessage-1)
 			{
-				message[119] = NULL;
+				message[maxCharInMessage - 1] = NULL;
 				break;
 			}
 		}
@@ -64,13 +72,13 @@ struct Host
 {
 	unsigned char typeId; // Your type here
 	// Your data here
-	char userName[12];
-	char messageText[120];
+	char userName[maxCharInName];
+	char messageText[maxCharInMessage];
 	bool privateMsg = false;
 
 	void AddToHostMsg(char newChar)
 	{
-		for (int i = 0; i < 120; i++)
+		for (int i = 0; i < maxCharInMessage; i++)
 		{
 			if (messageText[i] == NULL)
 			{
@@ -82,16 +90,16 @@ struct Host
 
 	void DeleteHostLastCharOfMsg()
 	{
-		for (int i = 0; i < 120; i++)
+		for (int i = 0; i < maxCharInMessage; i++)
 		{
 			if (messageText[i] == NULL && i != 0)
 			{
 				messageText[i - 1] = NULL;
 				break;
 			}
-			else if (i == 119)
+			else if (i == maxCharInMessage-1)
 			{
-				messageText[119] = NULL;
+				messageText[maxCharInMessage-1] = NULL;
 				break;
 			}
 		}
@@ -102,16 +110,14 @@ struct Host
 //#define MAX_CLIENTS 10
 //#define SERVER_PORT 60000
 
-unsigned int maxClients = 1;
-unsigned short serverPort = 600;
 
-bool canTypeMessage = true;
 
 enum GameMessages
 {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_KEYBOARD_INPUT = ID_USER_PACKET_ENUM + 2,
-	ID_BROADCAST_MESSAGE_TO_CLIENTS = ID_USER_PACKET_ENUM + 3
+	ID_SEND_PRIVATE_MESSAGE = ID_USER_PACKET_ENUM + 2,
+	ID_SEND_PUBLIC_BROADCAST = ID_USER_PACKET_ENUM + 3,
+	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 4
 };
 
 unsigned char GetPacketIdentifier(Packet* p);
@@ -219,7 +225,6 @@ int main(void)
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				//bsOut.Write(temp.typeId);
 				//bsOut.Write(temp.message);
-				participant.typeId = ID_KEYBOARD_INPUT;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				//peer->Send(&bsOut,HIGH_PRIORITY,RELIABLE_ORDERED,0,packet->systemAddress,true);
 				//RakNet::BitStream bsOut;
@@ -260,9 +265,6 @@ int main(void)
 					//DoMyPacketHandlerClient(packet);
 				}
 
-
-				break;
-			case ID_BROADCAST_MESSAGE_TO_CLIENTS:
 
 				break;
 			default:
