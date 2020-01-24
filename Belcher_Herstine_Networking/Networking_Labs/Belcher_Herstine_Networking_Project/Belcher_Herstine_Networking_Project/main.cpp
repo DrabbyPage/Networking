@@ -15,6 +15,7 @@ unsigned int maxClients = 1;
 unsigned short serverPort = 600;
 
 bool canTypeMessage = true;
+bool sendUserMessage = false;
 
 const int maxCharInMessage = 250;
 const int maxCharInName = 12;
@@ -57,7 +58,7 @@ struct Participant
 				message[i - 1] = NULL;
 				break;
 			}
-			else if (i == maxCharInMessage-1)
+			else if (i == maxCharInMessage - 1)
 			{
 				message[maxCharInMessage - 1] = NULL;
 				break;
@@ -97,9 +98,9 @@ struct Host
 				messageText[i - 1] = NULL;
 				break;
 			}
-			else if (i == maxCharInMessage-1)
+			else if (i == maxCharInMessage - 1)
 			{
-				messageText[maxCharInMessage-1] = NULL;
+				messageText[maxCharInMessage - 1] = NULL;
 				break;
 			}
 		}
@@ -124,11 +125,12 @@ unsigned char GetPacketIdentifier(Packet* p);
 void DoMyPacketHandlerClient(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
+bool SendUserMessage();
 
 int main(void)
 {
-	//Client temp;
-	//temp.typeId = ID_GAME_MESSAGE_1;
+	bool privateMessage = true;
+	
 
 	char tempName[12];
 	printf("Please enter you name (must be within 12 Characters):\n");
@@ -200,7 +202,10 @@ int main(void)
 		{
 			GetInput(participant.message);
 		}
-
+		//if (SendUserMessage())
+		//{
+		//	//printf("Pressing Enter");
+		//}
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -256,8 +261,6 @@ int main(void)
 				break;
 
 			case ID_GAME_MESSAGE_1:
-
-
 				printf("I am in game message\n");
 
 				if (GetPacketIdentifier(packet) == ID_GAME_MESSAGE_1/* User assigned packet identifier here */)
@@ -265,17 +268,44 @@ int main(void)
 					//DoMyPacketHandlerClient(packet);
 				}
 
+				break;
+			case ID_SEND_PRIVATE_MESSAGE:
+				if (!isServer)
+				{
+					//participant.typeId = ID_SEND_PRIVATE_MESSAGE;
+					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+				else
+				{
+					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
+					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
 
+				break;
+			case ID_SEND_PUBLIC_BROADCAST:
+				if (!isServer)
+				{
+					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+				}
+				else
+				{
+					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+				}
+				//need all of the usernames
+				//need all of the ip address
+				//need the message
+				break;
+			case ID_RECIEVE_MESSAGE:
+				// receives the server's msg and prints to screen
+				DoMyPacketHandlerHost(packet);
+				DoMyPacketHandlerParticipant(packet);
 				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
 			}
 
-			//				if (GetKeyState(VK_RETURN))
-
 		}
-
 
 	}
 
@@ -338,11 +368,32 @@ void GetInput(char tempMsg[])
 		pressingKey = true;
 
 	}
-
+	if (GetAsyncKeyState(VK_RETURN) != 0)
+	{
+		if (canTypeMessage)
+		{
+			// send the message
+			sendUserMessage = true;
+			//return true;
+		}
+		pressingKey = true;
+	}
+	else
+	{
+		sendUserMessage = false;
+	}
 	canTypeMessage = !pressingKey;
 
 
 }
+
+
+string GetSystemAddress(Packet* p)
+{
+	string ip = p->systemAddress.ToString();
+	return ip;
+}
+
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
 {
 	if (keyPressed)
@@ -380,6 +431,40 @@ void DoMyPacketHandlerClient(Packet* packet)
 	else
 	{
 		printf(s->message);
+	}
+
+	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
+}
+
+void DoMyPacketHandlerParticipant(Packet* packet)
+{
+	// Cast the data to the appropriate type of struct
+	Participant* s = (Participant*)packet->data;
+	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+	if (packet->length != sizeof(Participant))
+	{
+		return;
+	}
+	else
+	{
+		printf(s->message);
+	}
+
+	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
+}
+
+void DoMyPacketHandlerHost(Packet* packet)
+{
+	// Cast the data to the appropriate type of struct
+	Host* s = (Host*)packet->data;
+	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+	if (packet->length != sizeof(Host))
+	{
+		return;
+	}
+	else
+	{
+		printf(s->messageText);
 	}
 
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
