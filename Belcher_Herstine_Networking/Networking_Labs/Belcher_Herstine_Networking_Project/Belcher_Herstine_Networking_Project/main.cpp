@@ -105,6 +105,7 @@ struct Host
 unsigned int maxClients = 1;
 unsigned short serverPort = 600;
 
+bool canTypeMessage = true;
 
 enum GameMessages
 {
@@ -285,19 +286,59 @@ int main(void)
 
 void GetInput(char tempMsg[])
 {
-	std::cout<<GetAsyncKeyState('A');
+	//std::cout<<GetAsyncKeyState('A');
 
-	bool canTypeLetter = false;
+	int j = 0;
+	bool pressingKey = false;
 
-
-	for (char key = 'a'; key <= 'z'; key++)
+	for (char key = ' '; key <= '~'; key++)
 	{
-		CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
+		//CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
+
+
+
+		if (GetAsyncKeyState(key) != 0)
+		{
+//			std::cout << "we are pressing button" << std::endl;
+			if (canTypeMessage)
+			{
+				for (int i = 0; i < 256; i++)
+				{
+					if (i == key)
+					{
+						//std::cout << key;
+						canTypeMessage = false;
+						tempMsg[j] = key;
+						std::cout << tempMsg[j];
+						j++;
+
+					}
+
+				}
+			}
+			pressingKey = true;
+			
+
+			break;
+		}
 	}
-	for (char key = 'A'; key <= 'Z'; key++)
+	if (GetAsyncKeyState(VK_BACK) != 0)
 	{
-		CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
+		if(canTypeMessage)
+		{
+			//std::cout << "backspace";
+			//Console.Clear();
+			j--;
+			tempMsg[j] = NULL;
+			
+			std::cout << "\b" << tempMsg[j] << "\b";
+		}
+		pressingKey = true;
+		
 	}
+
+	canTypeMessage = !pressingKey;
+
 
 }
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
@@ -308,7 +349,7 @@ void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
 		{
 			if (msg[i] == NULL)
 			{
-				std::cout << charUsed;
+				std::cout << charUsed << "\r";
 				msg[i] = charUsed;
 				break;
 			}
@@ -329,7 +370,7 @@ void DoMyPacketHandlerClient(Packet* packet)
 {
 	// Cast the data to the appropriate type of struct
 	Client* s = (Client*)packet->data;
-	//	assert(packet->length == sizeof(Client)); // This is a good idea if you’re transmitting structs.
+	//	assert(packet->length == sizeof(Client)); // This is a good idea if youï¿½re transmitting structs.
 	if (packet->length != sizeof(Client))
 	{
 		return;
