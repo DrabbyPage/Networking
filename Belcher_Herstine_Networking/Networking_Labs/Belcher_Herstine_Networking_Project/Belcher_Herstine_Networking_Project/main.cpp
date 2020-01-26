@@ -12,7 +12,7 @@ using namespace RakNet;
 using namespace std;
 
 unsigned int maxClients = 2;
-unsigned short serverPort = 600;
+unsigned short serverPort = 6000;
 
 bool canTypeMessage = true;
 bool sendUserMessage = false;
@@ -23,6 +23,7 @@ const int maxCharInName = 12;
 const int maxUsers = 2; // make sure this is same as max Clients
 
 unsigned int currentClients = 0;
+bool continueLoop = true;
 
 #pragma pack(push, 1)
 struct Client
@@ -191,6 +192,7 @@ void RecieveClientInfo(Packet* packet, Host myHost)
 }
 int main(void)
 {
+	RakNet::SystemAddress serverAddress;
 	bool privateMessage = true;
 
 	//char listOfUsers[maxUsers][maxCharInName];
@@ -231,13 +233,12 @@ int main(void)
 		}
 	}
 
-
-
 	if (isServer)
 	{
 		printf("Starting the chat room for ");
 		printf(&host.userName[0]);
 		// We need to let the server accept incoming connections from the clients
+		serverAddress.FromString("184.171.151.119");
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
 	else {
@@ -248,6 +249,11 @@ int main(void)
 		}
 		printf("Connecting to the chat room for ");
 		printf(&participant.name[0]);
+
+		serverAddress.FromString(str);
+
+		std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
+
 		peer->Connect(str, serverPort, 0, 0);
 	}
 
@@ -389,62 +395,80 @@ int main(void)
 				break;
 			}
 
-			if (sendUserMessage)
+		}
+
+
+		if (sendUserMessage)
+		{
+			sendUserMessage = false;
+			// will send the msg
+			// will send the name of the person from
+			// will need to send who to as well
+			// the ID will either be broadcast or private
+			// testing:
+
+
+			if (!isServer)
 			{
-				sendUserMessage = false;
-				// will send the msg
-				// will send the name of the person from
-				// will need to send who to as well
-				// the ID will either be broadcast or private
-				// testing:
+				cout << "\nSending message: \n";
 
-
-				if (!isServer)
+				for (int i = 0; i < maxCharInMessage; i++)
 				{
-					//participant.typeId = ID_SEND_PRIVATE_MESSAGE;
-
-
-					cout << "\nSending message: \n";
-					for (int i = 0; i < maxCharInMessage; i++)
+					if (participant.message[i] == -52)
 					{
-						if (participant.message[i] == -52)
-						{
-							break;
-						}
-						else
-						{
-							cout << participant.message[i];
-						}
+						break;
 					}
-					cout << "\n";
-
-					participant.typeId = ID_SEND_PUBLIC_BROADCAST;
-					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					else
+					{
+						cout << participant.message[i];
+					}
+				}
+				cout << "\n";
+				if (privateMessage)
+				{
+					participant.typeId = ID_SEND_PRIVATE_MESSAGE;
 				}
 				else
 				{
-					cout << "\nSending message: \n";
-					for (int i = 0; i < maxCharInMessage; i++)
-					{
-						if (host.messageText[i] == -52)
-						{
-							break;
-						}
-						else
-						{
-							cout << host.messageText[i];
-						}
-					}
-					cout << "\n";
-					host.typeId = ID_RECIEVE_MESSAGE;
-					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
-					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					participant.typeId = ID_SEND_PUBLIC_BROADCAST;
 				}
 
+				peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+			}
+			else
+			{
+				cout << "\nSending message: \n";
+				for (int i = 0; i < maxCharInMessage; i++)
+				{
+					if (host.messageText[i] == -52)
+					{
+						break;
+					}
+					else
+					{
+						cout << host.messageText[i];
+					}
+				}
+				cout << "\n";
 
+				if (privateMessage)
+				{
+					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
+				}
+				else
+				{
+					host.typeId = ID_SEND_PUBLIC_BROADCAST;
+				}
+				peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 			}
 
+			for (int i = 0; i < maxCharInMessage; i++)
+			{
+				host.messageText[i] = -52;
+				participant.message[i] = -52;
+			}
 		}
+
 
 		if (isServer)
 		{
@@ -512,6 +536,17 @@ void GetInput(char tempMsg[])
 			tempMsg[j] = -52;
 
 			std::cout << "\b" << tempMsg[j] << "\b";
+		}
+		pressingKey = true;
+
+	}
+	if (GetAsyncKeyState(VK_ESCAPE) != 0)
+	{
+		if (canTypeMessage)
+		{
+			//std::cout << "backspace";
+			//Console.Clear();
+			continueLoop = false;
 		}
 		pressingKey = true;
 
