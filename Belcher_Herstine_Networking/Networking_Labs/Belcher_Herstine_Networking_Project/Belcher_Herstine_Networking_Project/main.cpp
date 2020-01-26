@@ -19,6 +19,7 @@ bool sendUserMessage = false;
 
 const int maxCharInMessage = 250;
 const int maxCharInName = 12;
+const int maxUsers = 1; // make sure this is same as max Clients
 
 #pragma pack(push, 1)
 struct Client
@@ -42,7 +43,7 @@ struct Participant
 	{
 		for (int i = 0; i < maxCharInMessage; i++)
 		{
-			if (message[i] == NULL)
+			if (message[i] == -52)
 			{
 				message[i] = newChar;
 				break;
@@ -126,7 +127,9 @@ enum GameMessages
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
 	ID_SEND_PRIVATE_MESSAGE = ID_USER_PACKET_ENUM + 2,
 	ID_SEND_PUBLIC_BROADCAST = ID_USER_PACKET_ENUM + 3,
-	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 4
+	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 4,
+	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 5
+
 };
 
 unsigned char GetPacketIdentifier(Packet* packet);
@@ -140,6 +143,8 @@ int main(void)
 {
 	bool privateMessage = true;
 	
+	//char listOfUsers[maxUsers][maxCharInName];
+
 	char tempName[maxCharInName];
 	printf("Please enter you name (must be within 12 Characters):\n");
 	fgets(tempName, 12, stdin);
@@ -200,6 +205,7 @@ int main(void)
 	// TODO - Add code body here
 	while (1)
 	{
+		Participant* tempPart;
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -216,6 +222,26 @@ int main(void)
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 
 				printf("Our connection request has been accepted.\n");
+
+				/*
+				participant.nameOfMessageRecipient[0] = 'c';
+				participant.nameOfMessageRecipient[1] = 'a';
+				participant.nameOfMessageRecipient[2] = 'm';
+
+				//participant.typeId = ID_SEND_PRIVATE_MESSAGE; // for private
+				participant.typeId = ID_SEND_PUBLIC_BROADCAST; // for public 
+
+				participant.AddToParticipantMsg('p');
+				participant.AddToParticipantMsg('l');
+				participant.AddToParticipantMsg('s');
+				participant.AddToParticipantMsg(' ');
+				participant.AddToParticipantMsg('w');
+				participant.AddToParticipantMsg('o');
+				participant.AddToParticipantMsg('r');
+				participant.AddToParticipantMsg('k');
+
+				peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				*/
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 				//RakNet::BitStream bsOut;
@@ -268,6 +294,8 @@ int main(void)
 				// just make sure we send it to the right person whether it is the host or antoher participant
 				printf("we are sending a private message");
 
+				
+
 				break;
 			case ID_SEND_PUBLIC_BROADCAST:
 				//need all of the usernames
@@ -275,19 +303,25 @@ int main(void)
 				//need the message
 				printf("we are sending a public broadcast");
 
-				//check if host or participant
-				// Cast the data to the appropriate type of struct
-				if (packet->length != sizeof(Host))
+				tempPart = (Participant*)packet->data;
+
+				for (int i = 0; i < maxCharInMessage; i++)
 				{
-					
-					
+					host.messageText[i] = tempPart->message[i];
 				}
+				host.typeId = ID_RECIEVE_MESSAGE;
+
+				peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				
 
 				break;
 			case ID_RECIEVE_MESSAGE:
 				// receives the server's msg and prints to screen
+				printf("\n incoming message: \n");
 				DoMyPacketHandlerHost(packet);
-				DoMyPacketHandlerParticipant(packet);
+				break;
+			case ID_BROADCAST_USER:
+				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -303,26 +337,6 @@ int main(void)
 				// the ID will either be broadcast or private
 
 				// testing:
-				if(!isServer)
-				{
-					participant.nameOfMessageRecipient[0] = 'c';
-					participant.nameOfMessageRecipient[0] = 'a';
-					participant.nameOfMessageRecipient[0] = 'm';
-
-					participant.typeId = ID_SEND_PRIVATE_MESSAGE; // for private
-					//participant.typeId = ID_SEND_PUBLIC_BROADCAST; // for public 
-
-					participant.AddToParticipantMsg('p');
-					participant.AddToParticipantMsg('l');
-					participant.AddToParticipantMsg('s');
-					participant.AddToParticipantMsg(' ');
-					participant.AddToParticipantMsg('w');
-					participant.AddToParticipantMsg('o');
-					participant.AddToParticipantMsg('r');
-					participant.AddToParticipantMsg('k');
-
-					peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);			
-				}
 
 				
 				if (!isServer)
@@ -333,6 +347,7 @@ int main(void)
 				}
 				else
 				{
+					participant.typeId = ID_BROADCAST_USER; 
 					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
 					peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
@@ -508,7 +523,17 @@ void DoMyPacketHandlerHost(Packet* packet)
 	}
 	else
 	{
-		printf(s->messageText);
+		for (int i = 0; i < maxCharInMessage; i++)
+		{
+			if (s->messageText[i] == -52)
+			{
+				break;
+			}
+			else
+			{
+				std::cout<<s->messageText[i];
+			}
+		}
 	}
 
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
