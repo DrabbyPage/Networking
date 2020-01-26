@@ -131,6 +131,8 @@ enum GameMessages
 
 unsigned char GetPacketIdentifier(Packet* packet);
 void DoMyPacketHandlerClient(Packet* packet);
+void DoMyPacketHandlerHost(Packet* packet);
+void DoMyPacketHandlerParticipant(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
 
@@ -138,7 +140,7 @@ int main(void)
 {
 	bool privateMessage = true;
 	
-	char tempName[12];
+	char tempName[maxCharInName];
 	printf("Please enter you name (must be within 12 Characters):\n");
 	fgets(tempName, 12, stdin);
 
@@ -158,7 +160,7 @@ int main(void)
 		SocketDescriptor sd;
 		peer->Startup(1, &sd, 1);
 		isServer = false;
-		for (int i = 0; i < 12; i++)
+		for (int i = 0; i < maxCharInName; i++)
 		{
 			participant.name[i] = tempName[i];
 		}
@@ -168,7 +170,7 @@ int main(void)
 		peer->Startup(maxClients, &sd, 1);
 		isServer = true;
 
-		for (int i = 0; i < 12; i++)
+		for (int i = 0; i < maxCharInName; i++)
 		{
 			host.userName[i] = tempName[i];
 		}
@@ -180,7 +182,6 @@ int main(void)
 	{
 		printf("Starting the chat room for ");
 		printf(&host.userName[0]);
-		printf(".\n");
 		// We need to let the server accept incoming connections from the clients
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
@@ -192,7 +193,6 @@ int main(void)
 		}
 		printf("Connecting to the chat room for ");
 		printf(&participant.name[0]);
-		printf(".\n");
 		peer->Connect(str, serverPort, 0, 0);
 	}
 
@@ -200,15 +200,6 @@ int main(void)
 	// TODO - Add code body here
 	while (1)
 	{
-		if (isServer)
-		{
-			GetInput(host.messageText);
-		}
-		else
-		{
-			GetInput(participant.message);
-		}
-
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -233,7 +224,7 @@ int main(void)
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				//bsOut.Write(temp.typeId);
 				//bsOut.Write(temp.message);
-				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				//peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				//peer->Send(&bsOut,HIGH_PRIORITY,RELIABLE_ORDERED,0,packet->systemAddress,true);
 				//RakNet::BitStream bsOut;
 				//bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
@@ -275,20 +266,21 @@ int main(void)
 			case ID_SEND_PRIVATE_MESSAGE:
 				// will get the message and send with case ID_RECEIVE_MESSAGE (always)
 				// just make sure we send it to the right person whether it is the host or antoher participant
-
+				printf("we are sending a private message");
 
 				break;
 			case ID_SEND_PUBLIC_BROADCAST:
 				//need all of the usernames
 				//need all of the ip address
 				//need the message
+				printf("we are sending a public broadcast");
 
 				//check if host or participant
 				// Cast the data to the appropriate type of struct
 				if (packet->length != sizeof(Host))
 				{
 					
-					return;
+					
 				}
 
 				break;
@@ -311,6 +303,7 @@ int main(void)
 				// the ID will either be broadcast or private
 
 				// testing:
+				if(!isServer)
 				{
 					participant.nameOfMessageRecipient[0] = 'c';
 					participant.nameOfMessageRecipient[0] = 'a';
@@ -328,9 +321,10 @@ int main(void)
 					participant.AddToParticipantMsg('r');
 					participant.AddToParticipantMsg('k');
 
-					peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);				}
+					peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);			
+				}
 
-				/*
+				
 				if (!isServer)
 				{
 					//participant.typeId = ID_SEND_PRIVATE_MESSAGE;
@@ -342,11 +336,21 @@ int main(void)
 					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
 					peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
-				*/
-
+				
+			
 			}
+			
 		}
-
+		
+		if (isServer)
+		{
+			GetInput(host.messageText);
+		}
+		else
+		{
+			GetInput(participant.message);
+		}
+		
 	}
 
 	printf("im done lol");
