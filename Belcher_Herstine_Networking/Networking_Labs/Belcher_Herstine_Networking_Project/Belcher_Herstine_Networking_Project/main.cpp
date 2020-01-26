@@ -36,6 +36,7 @@ struct Participant
 	// Your data here
 	char name[maxCharInName];
 	char message[maxCharInMessage];
+	char nameOfMessageRecipient[maxCharInMessage];
 
 	void AddToParticipantMsg(char newChar)
 	{
@@ -111,7 +112,14 @@ struct Host
 //#define MAX_CLIENTS 10
 //#define SERVER_PORT 60000
 
+// participant sends a msg
+// host gets it...
+// if it is not addressed to the host they send it to the right person (for private)
+// the recipient gets a cout of the msg
+// if the message is a broadcast the message is sent to everyone
 
+// type msg>>press enter>>send package with the id of private or broadcast message>>host gets package>>either prints to screen (if msg to host)>>
+// send msg to other person with msg ID Message receive
 
 enum GameMessages
 {
@@ -121,17 +129,15 @@ enum GameMessages
 	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 4
 };
 
-unsigned char GetPacketIdentifier(Packet* p);
+unsigned char GetPacketIdentifier(Packet* packet);
 void DoMyPacketHandlerClient(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
-bool SendUserMessage();
 
 int main(void)
 {
 	bool privateMessage = true;
 	
-
 	char tempName[12];
 	printf("Please enter you name (must be within 12 Characters):\n");
 	fgets(tempName, 12, stdin);
@@ -202,10 +208,7 @@ int main(void)
 		{
 			GetInput(participant.message);
 		}
-		//if (SendUserMessage())
-		//{
-		//	//printf("Pressing Enter");
-		//}
+
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -270,30 +273,24 @@ int main(void)
 
 				break;
 			case ID_SEND_PRIVATE_MESSAGE:
-				if (!isServer)
-				{
-					//participant.typeId = ID_SEND_PRIVATE_MESSAGE;
-					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				}
-				else
-				{
-					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
-					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				}
+				// will get the message and send with case ID_RECEIVE_MESSAGE (always)
+				// just make sure we send it to the right person whether it is the host or antoher participant
+
 
 				break;
 			case ID_SEND_PUBLIC_BROADCAST:
-				if (!isServer)
-				{
-					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
-				}
-				else
-				{
-					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
-				}
 				//need all of the usernames
 				//need all of the ip address
 				//need the message
+
+				//check if host or participant
+				// Cast the data to the appropriate type of struct
+				if (packet->length != sizeof(Host))
+				{
+					
+					return;
+				}
+
 				break;
 			case ID_RECIEVE_MESSAGE:
 				// receives the server's msg and prints to screen
@@ -305,6 +302,49 @@ int main(void)
 				break;
 			}
 
+			if (sendUserMessage)
+			{
+				sendUserMessage = false;
+				// will send the msg
+				// will send the name of the person from
+				// will need to send who to as well
+				// the ID will either be broadcast or private
+
+				// testing:
+				{
+					participant.nameOfMessageRecipient[0] = 'c';
+					participant.nameOfMessageRecipient[0] = 'a';
+					participant.nameOfMessageRecipient[0] = 'm';
+
+					participant.typeId = ID_SEND_PRIVATE_MESSAGE; // for private
+					//participant.typeId = ID_SEND_PUBLIC_BROADCAST; // for public 
+
+					participant.AddToParticipantMsg('p');
+					participant.AddToParticipantMsg('l');
+					participant.AddToParticipantMsg('s');
+					participant.AddToParticipantMsg(' ');
+					participant.AddToParticipantMsg('w');
+					participant.AddToParticipantMsg('o');
+					participant.AddToParticipantMsg('r');
+					participant.AddToParticipantMsg('k');
+
+					peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);				}
+
+				/*
+				if (!isServer)
+				{
+					//participant.typeId = ID_SEND_PRIVATE_MESSAGE;
+					
+					peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+				else
+				{
+					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
+					peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+				*/
+
+			}
 		}
 
 	}
