@@ -203,9 +203,7 @@ void PrintClientNames(Host& myHost)
 
 
 			}
-		}
-		for (int k = 0; k < currentClients; k++)
-		{
+
 			for (int j = 0; j < maxCharInIP; j++)
 			{
 				if (currentClients > 0 && myHost.participantIP[k][j] != -52)
@@ -214,12 +212,14 @@ void PrintClientNames(Host& myHost)
 				}
 
 			}
+			printf("\n");
 		}
 	}
 	else
 	{
 		std::cout << "No clients" << endl;
 	}
+	printf("\n");
 	printClientsNames = false;
 }
 
@@ -359,7 +359,7 @@ int main(void)
 				printf("Our connection request has been accepted.\n");
 				participant.typeId = ID_BROADCAST_USER;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				
+
 				// for testing:
 				/*
 				participant.nameOfMessageRecipient[0] = 'c';
@@ -388,7 +388,7 @@ int main(void)
 			{
 				printf("A connection is incoming.\n");
 				//if (GetPacketIdentifier(packet) == ID_CONNECTION_REQUEST_ACCEPTED/* User assigned packet identifier here */)
-				
+
 
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
@@ -541,7 +541,7 @@ int main(void)
 					host.messageText[i] = -52;
 				}
 			}
-				break;
+			break;
 			default:
 			{
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -549,7 +549,7 @@ int main(void)
 			}
 			}
 			//serverAddress = packet->systemAddress;
-			
+
 		}
 
 		if (printClientsNames)
@@ -591,8 +591,9 @@ int main(void)
 				participant.typeId = ID_SEND_PUBLIC_BROADCAST;
 			}
 
-			peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-			
+			//not working prob because of the server address
+			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
 
 			for (int i = 0; i < maxCharInMessage; i++)
 			{
@@ -604,7 +605,7 @@ int main(void)
 
 
 		GetInput(participant.message);
-		
+
 
 	}
 
@@ -669,7 +670,7 @@ void GetInput(char tempMsg[])
 			j--;
 			tempMsg[j] = -52;
 
-			std::cout << "\b" << tempMsg[j] << "\b";
+			std::cout << "\b" << " " << "\b";
 		}
 		pressingKey = true;
 
@@ -687,12 +688,16 @@ void GetInput(char tempMsg[])
 	}
 	if (GetAsyncKeyState(VK_CONTROL) != 0)
 	{
-		if (canTypeMessage)
+		if (isServer)
 		{
-			
-			printClientsNames = true;
+			if (canTypeMessage)
+			{
+
+				printClientsNames = true;
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
+
 
 	}
 	if (GetAsyncKeyState(VK_TAB) != 0)
@@ -715,28 +720,33 @@ void GetInput(char tempMsg[])
 	}
 	if (GetAsyncKeyState(VK_PRIOR) != 0)
 	{
-		if (canTypeMessage)
+		if (!isServer)
 		{
-			//std::cout << "backspace";
-			//Console.Clear();
-			printf("send private message bitch");
-			privateMessage = true;
+			if (canTypeMessage)
+			{
+				//std::cout << "backspace";
+				//Console.Clear();
+				printf("\nsend private message\n");
+				privateMessage = true;
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
 
 	}
 	if (GetAsyncKeyState(VK_NEXT) != 0)
 	{
-		if (canTypeMessage)
+		if (!isServer)
 		{
-			//std::cout << "backspace";
-			//Console.Clear();
-			printf("send public message bitch");
-			privateMessage = false;
+			if (canTypeMessage)
+			{
+				//std::cout << "backspace";
+				//Console.Clear();
+				printf("\nsend public message\n");
+				privateMessage = false;
 
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
-
 	}
 	if (GetAsyncKeyState(VK_RETURN) != 0 && tempMsg[0] != -52)
 	{
