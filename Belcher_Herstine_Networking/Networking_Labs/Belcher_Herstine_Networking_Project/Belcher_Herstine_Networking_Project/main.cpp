@@ -25,6 +25,10 @@ const int maxUsers = 2; // make sure this is same as max Clients
 unsigned int currentClients = 0;
 bool continueLoop = true;
 
+bool printClientsNames = false;
+
+bool isServer;
+
 #pragma pack(push, 1)
 struct Client
 {
@@ -80,8 +84,9 @@ struct Host
 	unsigned char typeId; // Your type here
 	// Your data here
 	char userName[maxCharInName];
-	char participantName[maxUsers][maxCharInName];
+	char listOfParticipants[maxUsers][maxCharInName];
 	char participantIP[maxUsers][maxCharInIP];
+	char participantsName[maxCharInName];
 	char messageText[maxCharInMessage];
 	bool privateMsg = false;
 
@@ -89,7 +94,7 @@ struct Host
 	{
 		for (int i = 0; i < maxCharInMessage; i++)
 		{
-			if (messageText[i] == NULL)
+			if (messageText[i] == NULL || messageText[i] == -52)
 			{
 				messageText[i] = newChar;
 				break;
@@ -147,7 +152,7 @@ void DoMyPacketHandlerParticipant(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
 
-void RecieveClientInfo(Packet* packet, Host myHost)
+void RecieveClientInfo(Packet* packet, Host& myHost)
 {
 	// Cast the data to the appropriate type of struct
 	Participant* s = (Participant*)packet->data;
@@ -166,8 +171,8 @@ void RecieveClientInfo(Packet* packet, Host myHost)
 			}
 			else
 			{
-				myHost.participantName[currentClients][i] = s->name[i];
-				std::cout << myHost.participantName[currentClients][i];
+				myHost.listOfParticipants[currentClients][i] = s->name[i];
+				std::cout << myHost.listOfParticipants[currentClients][i];
 
 			}
 		}
@@ -190,6 +195,68 @@ void RecieveClientInfo(Packet* packet, Host myHost)
 
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
+
+
+void PrintClientNames(Host& myHost)
+{
+	if (currentClients > 0)
+	{
+		for (int k = 0; k < currentClients; k++)
+		{
+
+			for (int j = 0; j < maxCharInName; j++)
+			{
+				if (currentClients > 0 && myHost.listOfParticipants[k][j] != -52)
+				{
+					std::cout << myHost.listOfParticipants[k][j];
+				}
+
+
+			}
+		}
+		for (int k = 0; k < currentClients; k++)
+		{
+			for (int j = 0; j < maxCharInIP; j++)
+			{
+				if (currentClients > 0 && myHost.participantIP[k][j] != -52)
+				{
+					std::cout << myHost.participantIP[k][j];
+				}
+
+			}
+		}
+	}
+	else
+	{
+		std::cout << "No clients" << endl;
+	}
+	printClientsNames = false;
+}
+
+
+
+
+void DisplayConsoleWindow()
+{
+	printf("\033[36m");
+	printf("-------------------------------Console Window-------------------------------\n");
+	printf("\033[35m");
+	printf("-----ESC: Leave Chat   +: Send private message   =: Send public message-----\n");
+	printf("------------------------TAB: Open Console Window----------------------------\n");
+	printf("\033[0m");
+}
+
+void DisplayHostWindow()
+{
+	printf("\033[31m");
+	printf("-------------------------Admin Console Window-------------------------------\n");
+	printf("\033[32m");
+	printf("----------------ESC: Close Program   TAB: Open Console window---------------\n");
+	printf("-------------------CTRL: Print user names and IP addresses------------------\n");
+	printf("\033[0m");
+}
+
+
 int main(void)
 {
 	RakNet::SystemAddress serverAddress;
@@ -198,8 +265,35 @@ int main(void)
 	//char listOfUsers[maxUsers][maxCharInName];
 
 	char tempName[maxCharInName];
+	string checking;
 	printf("Please enter you name (must be within 12 Characters):\n");
+	//std::cin >> checking;
 	fgets(tempName, 12, stdin);
+
+	//while (checking.size() > 12)
+	//{
+	//	printf("Please enter a valid user\n");
+	//
+	//	std::cin >> checking;
+	//}
+	//
+	//std::cout << "Welcome ";
+	//
+	//
+	//for (int i = 0; i < checking.size(); i++)
+	//{
+	//
+	//	if (checking[i] != NULL && checking	[i] != -52)
+	//	{
+	//		tempName[i] = checking[i];
+	//		std::cout << tempName[i];
+	//	}
+	//	
+	//
+	//}
+
+	std::cout << endl;
+
 
 	Host host;
 	Participant participant;
@@ -207,7 +301,7 @@ int main(void)
 
 	char str[512];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
-	bool isServer;
+	//bool isServer;
 	RakNet::Packet* packet;
 
 	printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
@@ -237,6 +331,10 @@ int main(void)
 	{
 		printf("Starting the chat room for ");
 		printf(&host.userName[0]);
+
+		DisplayHostWindow();
+
+
 		// We need to let the server accept incoming connections from the clients
 		serverAddress.FromString("184.171.151.119");
 		peer->SetMaximumIncomingConnections(maxClients);
@@ -250,6 +348,9 @@ int main(void)
 		printf("Connecting to the chat room for ");
 		printf(&participant.name[0]);
 
+		DisplayConsoleWindow();
+
+
 		serverAddress.FromString(str);
 
 		std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
@@ -259,9 +360,10 @@ int main(void)
 
 
 	// TODO - Add code body here
-	while (1)
+	while (continueLoop)
 	{
 		Participant* tempPart;
+		Host* tempHost;
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -378,7 +480,17 @@ int main(void)
 			case ID_RECIEVE_MESSAGE:
 				// receives the server's msg and prints to screen
 				printf("\n incoming message: \n");
-				//DoMyPacketHandlerHost(packet);
+				tempHost = (Host*)packet->data;
+				std::cout << "\nIncoming message from ";
+				for (int i = 0; i < maxCharInName; i++)
+				{
+					if (tempHost->participantsName[i] != NULL && tempHost->participantsName[i] != -52)
+					{
+						std::cout << tempHost->participantsName[i];
+					}
+				}
+				std::cout << ": \n";
+				DoMyPacketHandlerHost(packet);
 				break;
 			case ID_BROADCAST_USER:
 				if (GetPacketIdentifier(packet) == ID_BROADCAST_USER)
@@ -387,7 +499,41 @@ int main(void)
 				}
 				host.typeId = ID_RECIEVE_MESSAGE;
 
+				// this is message to say that the user has entered the room
+				{
+					for (int i = 0; i < maxCharInName; i++)
+					{
+						Participant* temp = (Participant*)packet->data;
+
+						if (temp->name[i] != -52 || temp->name[i] == '\n')
+						{
+							host.messageText[i] = temp->name[i];
+						}
+						else
+						{
+							break;
+						}
+					}
+					host.AddToHostMsg(' ');
+
+					host.AddToHostMsg('h');
+					host.AddToHostMsg('a');
+					host.AddToHostMsg('s');
+					host.AddToHostMsg('_');
+					host.AddToHostMsg('j');
+					host.AddToHostMsg('o');
+					host.AddToHostMsg('i');
+					host.AddToHostMsg('n');
+					host.AddToHostMsg('e');
+					host.AddToHostMsg('d');
+				}
+
 				peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+				for (int i = 0; i < maxCharInMessage; i++)
+				{
+					host.messageText[i] = -52;
+				}
 
 				break;
 			default:
@@ -395,6 +541,11 @@ int main(void)
 				break;
 			}
 
+		}
+
+		if (printClientsNames)
+		{
+			PrintClientNames(host);
 		}
 
 
@@ -408,63 +559,35 @@ int main(void)
 			// testing:
 
 
-			if (!isServer)
-			{
-				cout << "\nSending message: \n";
-
-				for (int i = 0; i < maxCharInMessage; i++)
-				{
-					if (participant.message[i] == -52)
-					{
-						break;
-					}
-					else
-					{
-						cout << participant.message[i];
-					}
-				}
-				cout << "\n";
-				if (privateMessage)
-				{
-					participant.typeId = ID_SEND_PRIVATE_MESSAGE;
-				}
-				else
-				{
-					participant.typeId = ID_SEND_PUBLIC_BROADCAST;
-				}
-
-				peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-			}
-			else
-			{
-				cout << "\nSending message: \n";
-				for (int i = 0; i < maxCharInMessage; i++)
-				{
-					if (host.messageText[i] == -52)
-					{
-						break;
-					}
-					else
-					{
-						cout << host.messageText[i];
-					}
-				}
-				cout << "\n";
-
-				if (privateMessage)
-				{
-					//host.typeId = ID_SEND_PRIVATE_MESSAGE;
-				}
-				else
-				{
-					host.typeId = ID_SEND_PUBLIC_BROADCAST;
-				}
-				peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-			}
+			cout << "\nSending message: \n";
 
 			for (int i = 0; i < maxCharInMessage; i++)
 			{
-				host.messageText[i] = -52;
+				if (participant.message[i] == -52)
+				{
+					break;
+				}
+				else
+				{
+					cout << participant.message[i];
+				}
+			}
+			cout << "\n";
+			if (privateMessage)
+			{
+				participant.typeId = ID_SEND_PRIVATE_MESSAGE;
+			}
+			else
+			{
+				participant.typeId = ID_SEND_PUBLIC_BROADCAST;
+			}
+
+			peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+			
+
+			for (int i = 0; i < maxCharInMessage; i++)
+			{
+				//host.messageText[i] = -52;
 				participant.message[i] = -52;
 			}
 		}
@@ -532,6 +655,13 @@ void GetInput(char tempMsg[])
 		{
 			//std::cout << "backspace";
 			//Console.Clear();
+			for (int i = 1; i < maxCharInMessage; i++)
+			{
+				if (tempMsg[i] == NULL || tempMsg[i] == -52)
+				{
+					tempMsg[i - 1] = -52;
+				}
+			}
 			j--;
 			tempMsg[j] = -52;
 
@@ -547,6 +677,34 @@ void GetInput(char tempMsg[])
 			//std::cout << "backspace";
 			//Console.Clear();
 			continueLoop = false;
+		}
+		pressingKey = true;
+
+	}
+	if (GetAsyncKeyState(VK_CONTROL) != 0)
+	{
+		if (canTypeMessage)
+		{
+			
+			printClientsNames = true;
+		}
+		pressingKey = true;
+
+	}
+	if (GetAsyncKeyState(VK_TAB) != 0)
+	{
+		if (canTypeMessage)
+		{
+			//std::cout << "backspace";
+			//Console.Clear();
+			if (isServer)
+			{
+				DisplayHostWindow();
+			}
+			else
+			{
+				DisplayConsoleWindow();
+			}
 		}
 		pressingKey = true;
 
