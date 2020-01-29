@@ -440,6 +440,7 @@ int main(void)
 				RakNet::SystemAddress recipientAddress;
 				bool userExists = false;
 
+
 				// ge the message and get the name from the message... 
 
 				// transfer the name of participant to the host
@@ -454,7 +455,11 @@ int main(void)
 				{
 					if (temp->message[i] != '/n' && temp->message[i] != ' ' && temp->message[i] != -52)
 					{
-						recipientName[i] = temp->message[i];
+						recipientName.push_back(temp->message[i]);
+					}
+					else
+					{
+						break;
 					}
 				}
 
@@ -480,10 +485,11 @@ int main(void)
 						{
 							if (recipientName[j] == host.listOfParticipantsName[i][j])
 							{
-								if (j == maxCharInName - 1)
+								if (j == maxCharInName - 1 || host.listOfParticipantsName[i][j+1] == -52)
 								{
 									userExists = true;
 									recipientAddress = host.listOfParticipantsIP[i];
+									break;
 								}
 							}
 							else
@@ -500,6 +506,10 @@ int main(void)
 
 						peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, recipientAddress, false);
 
+					}
+					else
+					{
+						// send that the user does not exist
 					}
 				}
 
