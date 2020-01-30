@@ -18,7 +18,7 @@ bool canTypeMessage = true;
 bool sendUserMessage = false;
 
 const int maxCharInMessage = 250;
-const int maxCharInIP = 39;
+const int maxCharInIP = 19;
 const int maxCharInName = 12;
 const int maxUsers = 2; // make sure this is same as max Clients
 
@@ -437,6 +437,7 @@ int main(void)
 
 				Participant* temp = (Participant*)packet->data;
 				std::string recipientName;
+				std::string recipientStringAddress[maxCharInIP];
 				RakNet::SystemAddress recipientAddress;
 				bool userExists = false;
 
@@ -481,14 +482,19 @@ int main(void)
 					// check for the recipient address 
 					for (int i = 0; i < currentClients; i++)
 					{
-						for (int j = 0; j < maxCharInName; j++)
+						for (int j = 0; j < recipientName.size(); j++)
 						{
 							if (recipientName[j] == host.listOfParticipantsName[i][j])
 							{
-								if (j == maxCharInName - 1 || host.listOfParticipantsName[i][j+1] == -52)
+								if (j == recipientName.size() - 1)
 								{
 									userExists = true;
+									
+									
+									
+									std::cout << "List: " << host.listOfParticipantsIP[i] << endl;
 									recipientAddress = host.listOfParticipantsIP[i];
+									recipientAddress.FromString(host.listOfParticipantsIP[i], '|', 6);
 									break;
 								}
 							}
@@ -498,7 +504,6 @@ int main(void)
 							}
 						}
 					}
-
 
 					if (userExists)
 					{
