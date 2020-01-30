@@ -135,7 +135,7 @@ enum GameMessages
 };
 
 unsigned char GetPacketIdentifier(Packet* packet);
-void DoMyPacketHandlerHost(Packet* packet);
+void DoMyPacketHandlerHost(Host* hostPack);
 void DoMyPacketHandlerParticipant(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
@@ -176,10 +176,10 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 {
 	if (currentClients > 0)
 	{
-		for (int k = 0; k < currentClients; k++)
+		for (unsigned int k = 0; k < currentClients; k++)
 		{
 
-			for (int j = 0; j < maxCharInName; j++)
+			for (unsigned int j = 0; j < maxCharInName; j++)
 			{
 				if (currentClients > 0 && myHost.listOfParticipantsName[k][j] != -52)
 				{
@@ -452,7 +452,7 @@ int main(void)
 				if (recipientName == "ALL" || recipientName == "all")
 				{
 					//loop through all addresses and send through that
-					for (int i = 0; i < currentClients; i++)
+					for (unsigned int i = 0; i < currentClients; i++)
 					{
 						peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[i], false);
 					}
@@ -460,7 +460,7 @@ int main(void)
 				else
 				{
 					// check for the recipient address 
-					for (int i = 0; i < currentClients; i++)
+					for (unsigned int i = 0; i < currentClients; i++)
 					{
 						for (int j = 0; j < recipientName.size(); j++)
 						{
@@ -488,7 +488,7 @@ int main(void)
 						{
 							if (j == recipientName.size() - 1)
 							{
-								for (int i = recipientName.size(); i < maxCharInMessage; i++)
+								for (size_t i = recipientName.size(); i < maxCharInMessage; i++)
 								{
 									if (temp->message[i] != -52 || i == maxCharInMessage)
 									{
@@ -508,6 +508,11 @@ int main(void)
 						{
 							break;
 						}
+					}
+
+					for (int i = 0; i < maxCharInMessage; i++)
+					{
+						host.messageText[i] = temp->message[i];
 					}
 
 					if (msgToHost)
@@ -587,7 +592,7 @@ int main(void)
 					}
 				}
 				std::cout << ": \n";
-				DoMyPacketHandlerHost(packet);
+				DoMyPacketHandlerHost(tempHost);
 				break;
 			}
 			case ID_BROADCAST_USER:
@@ -919,22 +924,22 @@ void DoMyPacketHandlerParticipant(Packet* packet)
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
 
-void DoMyPacketHandlerHost(Packet* packet)
+void DoMyPacketHandlerHost(Host* hostPack)
 {
 	// Cast the data to the appropriate type of struct
-	Host* s = (Host*)packet->data;
 
 	for (int i = 0; i < maxCharInMessage; i++)
 	{
-		if (s->messageText[i] == -52)
+		if (hostPack->messageText[i] == -52)
 		{
 			break;
 		}
 		else
 		{
-			std::cout << s->messageText[i];
+			std::cout << hostPack->messageText[i];
 		}
 	}
+
 
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
