@@ -423,6 +423,7 @@ int main(void)
 				std::string recipientStringAddress[maxCharInIP];
 				RakNet::SystemAddress recipientAddress;
 				bool userExists = false;
+				bool msgToHost = false;
 
 
 				// ge the message and get the name from the message... 
@@ -483,18 +484,19 @@ int main(void)
 
 					for (int j = 0; j < recipientName.size(); j++)
 					{
-						if (recipientName[j] == host.userName[j])
+						if (recipientName[j] == participant.name[j])
 						{
 							if (j == recipientName.size() - 1)
 							{
 								for (int i = recipientName.size(); i < maxCharInMessage; i++)
 								{
-									if (temp->message[i] != -52)
+									if (temp->message[i] != -52 || i == maxCharInMessage)
 									{
 										std::cout << temp->message[i];
 									}
 									else
 									{
+										msgToHost = true;
 										break;
 									}
 								}
@@ -508,50 +510,58 @@ int main(void)
 						}
 					}
 
-					if (userExists)
+					if (msgToHost)
 					{
-						//send message to corresponging recipient  system address
-
-						peer->Send((const char*)& host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, recipientAddress, false);
-
+						break;
 					}
 					else
 					{
-						// make the message say that the person does not exist 
-						//resets teh host msg
-						for (int i = 0; i < maxCharInMessage; i++)
+						if (userExists)
 						{
-							host.messageText[i] = -52;
+							//send message to corresponging recipient  system address
+
+							peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, recipientAddress, false);
+
 						}
-						// message that they do not exist
+						else
 						{
-							host.AddToHostMsg('T');
-							host.AddToHostMsg('H');
-							host.AddToHostMsg('E');
-							host.AddToHostMsg(' ');
-							host.AddToHostMsg('U');
-							host.AddToHostMsg('S');
-							host.AddToHostMsg('E');
-							host.AddToHostMsg('R');
-							host.AddToHostMsg(' ');
-							host.AddToHostMsg('D');
-							host.AddToHostMsg('O');
-							host.AddToHostMsg('E');
-							host.AddToHostMsg('S');
-							host.AddToHostMsg(' ');
-							host.AddToHostMsg('N');
-							host.AddToHostMsg('O');
-							host.AddToHostMsg('T');
-							host.AddToHostMsg(' ');
-							host.AddToHostMsg('E');
-							host.AddToHostMsg('X');
-							host.AddToHostMsg('I');
-							host.AddToHostMsg('S');
-							host.AddToHostMsg('T');
+							// make the message say that the person does not exist 
+							//resets teh host msg
+							for (int i = 0; i < maxCharInMessage; i++)
+							{
+								host.messageText[i] = -52;
+							}
+							// message that they do not exist
+							{
+								host.AddToHostMsg('T');
+								host.AddToHostMsg('H');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('U');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('R');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('D');
+								host.AddToHostMsg('O');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('N');
+								host.AddToHostMsg('O');
+								host.AddToHostMsg('T');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('X');
+								host.AddToHostMsg('I');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg('T');
+							}
+							// send that the user does not exist
+							peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 						}
-						// send that the user does not exist
-						peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 					}
+
 				}
 
 
