@@ -581,7 +581,7 @@ int main(void)
 				std::cout << "\nIncoming message from ";
 				for (int i = 0; i < maxCharInName; i++)
 				{
-					if (tempHost->participantsName[i] != NULL && tempHost->participantsName[i] != -52)
+					if (tempHost->participantsName[i] != NULL && tempHost->participantsName[i] != -52 && tempHost->participantsName[i] != '\n')
 					{
 						std::cout << tempHost->participantsName[i];
 					}
@@ -924,22 +924,15 @@ void DoMyPacketHandlerHost(Packet* packet)
 	// Cast the data to the appropriate type of struct
 	Host* s = (Host*)packet->data;
 
-	if (packet->length != sizeof(Host))
+	for (int i = 0; i < maxCharInMessage; i++)
 	{
-		return;
-	}
-	else
-	{
-		for (int i = 0; i < maxCharInMessage; i++)
+		if (s->messageText[i] == -52)
 		{
-			if (s->messageText[i] == -52)
-			{
-				break;
-			}
-			else
-			{
-				std::cout << s->messageText[i];
-			}
+			break;
+		}
+		else
+		{
+			std::cout << s->messageText[i];
 		}
 	}
 
