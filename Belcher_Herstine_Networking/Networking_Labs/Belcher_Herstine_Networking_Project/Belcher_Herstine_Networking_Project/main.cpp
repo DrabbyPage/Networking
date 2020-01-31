@@ -171,7 +171,6 @@ void RecieveClientInfo(Packet* packet, Host& myHost)
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
 
-
 void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 {
 	if (currentClients > 0)
@@ -204,9 +203,6 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 	printClientsNames = false;
 }
 
-
-
-
 void DisplayConsoleWindow()
 {
 	printf("\033[36m");
@@ -227,7 +223,26 @@ void DisplayHostWindow()
 	printf("\033[0m");
 }
 
+// so instead of sending host information we should create a package of game data
+// for both the battleship and the tic tac toe we will send coordinate data 
+//   1  2  3
+// a
+// b
+// c
+//--------------------------------------------------------------------------------
 
+// let the code decide who wins and loses then send a message to both about the winning
+// the spaces will display x and o in the spots
+
+// -------------------------------------------------------------------------------
+
+// tic tac toe wont need the coodinates we could just get the number 1-9
+//
+// 1 2 3 
+// 4 5 6 
+// 7 8 9 
+//
+//---------------------------------------------------------------------------------
 int main(void)
 {
 	RakNet::SystemAddress serverAddress;
@@ -724,7 +739,6 @@ int main(void)
 	return 0;
 }
 
-
 void GetInput(char tempMsg[])
 {
 	//std::cout<<GetAsyncKeyState('A');
@@ -875,7 +889,6 @@ void GetInput(char tempMsg[])
 
 
 }
-
 
 string GetSystemAddress(Packet* p)
 {
