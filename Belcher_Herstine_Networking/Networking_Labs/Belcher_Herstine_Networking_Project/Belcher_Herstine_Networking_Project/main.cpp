@@ -769,7 +769,7 @@ void GetInput(char tempMsg[])
 		if (canTypeMessage)
 		{
 			//std::cout << "backspace";
-]			continueLoop = false;
+			continueLoop = false;
 		}
 		pressingKey = true;
 
@@ -793,7 +793,6 @@ void GetInput(char tempMsg[])
 		if (canTypeMessage)
 		{
 			//std::cout << "backspace";
-			//Console.Clear();
 			if (isServer)
 			{
 				DisplayHostWindow();
@@ -813,7 +812,6 @@ void GetInput(char tempMsg[])
 			if (canTypeMessage)
 			{
 				//std::cout << "backspace";
-				//Console.Clear();
 				printf("\nsend private message\n");
 				privateMessage = true;
 			}
@@ -828,7 +826,6 @@ void GetInput(char tempMsg[])
 			if (canTypeMessage)
 			{
 				//std::cout << "backspace";
-				//Console.Clear();
 				printf("\nsend public message\n");
 				privateMessage = false;
 
