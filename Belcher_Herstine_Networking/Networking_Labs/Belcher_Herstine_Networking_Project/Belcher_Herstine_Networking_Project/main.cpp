@@ -749,7 +749,7 @@ void GetInput(char tempMsg[])
 		if (canTypeMessage)
 		{
 			//std::cout << "backspace";
-]			for (int i = 1; i < maxCharInMessage; i++)
+			for (int i = 1; i < maxCharInMessage; i++)
 			{
 				if (tempMsg[i] == NULL || tempMsg[i] == -52)
 				{
