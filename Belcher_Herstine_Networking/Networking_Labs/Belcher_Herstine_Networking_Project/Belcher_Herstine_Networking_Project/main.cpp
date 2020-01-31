@@ -18,7 +18,7 @@ bool canTypeMessage = true;
 bool sendUserMessage = false;
 
 const int maxCharInMessage = 250;
-const int maxCharInIP = 39;
+const int maxCharInIP = 19;
 const int maxCharInName = 12;
 const int maxUsers = 2; // make sure this is same as max Clients
 
@@ -75,8 +75,7 @@ struct Host
 	unsigned char typeId; // Your type here
 	// Your data here
 	char userName[maxCharInName];
-	char listOfParticipants[maxUsers][maxCharInName];
-	char participantIP[maxUsers][maxCharInIP];
+	char listOfParticipantsName[maxUsers][maxCharInName];
 	char participantsName[maxCharInName];
 	char messageText[maxCharInMessage];
 	bool privateMsg = false;
@@ -129,15 +128,14 @@ struct Host
 enum GameMessages
 {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_SEND_PRIVATE_MESSAGE = ID_USER_PACKET_ENUM + 2,
-	ID_SEND_PUBLIC_BROADCAST = ID_USER_PACKET_ENUM + 3,
-	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 4,
-	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 5
+	ID_SEND_MESSAGE = ID_USER_PACKET_ENUM + 2,
+	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 3,
+	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 4
 
 };
 
 unsigned char GetPacketIdentifier(Packet* packet);
-void DoMyPacketHandlerHost(Packet* packet);
+void DoMyPacketHandlerHost(Host* hostPack);
 void DoMyPacketHandlerParticipant(Packet* packet);
 void GetInput(char msg[]);
 void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
@@ -161,25 +159,12 @@ void RecieveClientInfo(Packet* packet, Host& myHost)
 			}
 			else
 			{
-				myHost.listOfParticipants[currentClients][i] = s->name[i];
-				std::cout << myHost.listOfParticipants[currentClients][i];
+				myHost.listOfParticipantsName[currentClients][i] = s->name[i];
+				std::cout << myHost.listOfParticipantsName[currentClients][i];
 
 			}
 		}
 
-		for (int j = 0; j < maxCharInIP; j++)
-		{
-			if (packet->systemAddress.ToString()[j] != NULL)
-			{
-				myHost.participantIP[currentClients][j] = packet->systemAddress.ToString()[j];
-				std::cout << myHost.participantIP[currentClients][j];
-
-			}
-			else
-			{
-				break;
-			}
-		}
 		currentClients++;
 	}
 
@@ -187,39 +172,35 @@ void RecieveClientInfo(Packet* packet, Host& myHost)
 }
 
 
-void PrintClientNames(Host& myHost)
+void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 {
 	if (currentClients > 0)
 	{
-		for (int k = 0; k < currentClients; k++)
+		for (unsigned int k = 0; k < currentClients; k++)
 		{
 
-			for (int j = 0; j < maxCharInName; j++)
+			for (unsigned int j = 0; j < maxCharInName; j++)
 			{
-				if (currentClients > 0 && myHost.listOfParticipants[k][j] != -52)
+				if (currentClients > 0 && myHost.listOfParticipantsName[k][j] != -52)
 				{
-					std::cout << myHost.listOfParticipants[k][j];
+					std::cout << myHost.listOfParticipantsName[k][j];
 				}
 
 
 			}
-		}
-		for (int k = 0; k < currentClients; k++)
-		{
-			for (int j = 0; j < maxCharInIP; j++)
-			{
-				if (currentClients > 0 && myHost.participantIP[k][j] != -52)
-				{
-					std::cout << myHost.participantIP[k][j];
-				}
 
+			if (currentClients > 0)
+			{
+				std::cout << listOfAddress[k].ToString();
 			}
+			printf("\n");
 		}
 	}
 	else
 	{
 		std::cout << "No clients" << endl;
 	}
+	printf("\n");
 	printClientsNames = false;
 }
 
@@ -252,6 +233,7 @@ int main(void)
 	RakNet::SystemAddress serverAddress;
 
 	//char listOfUsers[maxUsers][maxCharInName];
+	RakNet::SystemAddress listOfParticipantAddress[maxUsers];
 
 	char tempName[maxCharInName];
 	string checking;
@@ -303,10 +285,9 @@ int main(void)
 
 		// how do we get our IP address
 		// We need to let the server accept incoming connections from the clients
-		//serverAddress.FromString("184.171.151.119");
-		serverAddress.FromString("216.93.149.206");
 
-		std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
+
+		//std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
 
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
@@ -358,8 +339,9 @@ int main(void)
 			{
 				printf("Our connection request has been accepted.\n");
 				participant.typeId = ID_BROADCAST_USER;
+				serverAddress = packet->systemAddress;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				
+
 				// for testing:
 				/*
 				participant.nameOfMessageRecipient[0] = 'c';
@@ -388,7 +370,7 @@ int main(void)
 			{
 				printf("A connection is incoming.\n");
 				//if (GetPacketIdentifier(packet) == ID_CONNECTION_REQUEST_ACCEPTED/* User assigned packet identifier here */)
-				
+
 
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
@@ -426,50 +408,173 @@ int main(void)
 
 				break;
 			}
-			case ID_SEND_PRIVATE_MESSAGE:
+			case ID_SEND_MESSAGE:
 			{
-				// will get the message and send with case ID_RECEIVE_MESSAGE (always)
-				// just make sure we send it to the right person whether it is the host or antoher participant
-				printf("we are sending a private message");
+				// will only go to the host which then will send a host package with the info
+				// info data will be ID_RECIEVE MESSAGE
 
+				printf("\nHost Received Message To Send\n");
 
-
-				break;
-			}
-			case ID_SEND_PUBLIC_BROADCAST:
-			{
-				//need all of the usernames
-				//need all of the ip address
-				//need the message
-				printf("we are sending a public broadcast");
-
-				tempPart = (Participant*)packet->data;
-
-				for (int i = 0; i < maxCharInMessage; i++)
-				{
-					host.messageText[i] = tempPart->message[i];
-				}
-
-				for (int i = 0; i < maxCharInName; i++)
-				{
-					host.participantsName[i] = tempPart->name[i];
-				}
-
+				// make the id to send to the recipient
 				host.typeId = ID_RECIEVE_MESSAGE;
 
-				RakNet::SystemAddress tempAddress;
+				Participant* temp = (Participant*)packet->data;
+				std::string recipientName;
+				std::string recipientStringAddress[maxCharInIP];
+				RakNet::SystemAddress recipientAddress;
+				bool userExists = false;
+				bool msgToHost = false;
 
-				for (int i = 0; i < currentClients; i++)
+
+				// ge the message and get the name from the message... 
+
+				// transfer the name of participant to the host
+				for (int i = 0; i < maxCharInName; i++)
 				{
-					for (int j = 0; j < maxCharInName; j++)
-					{
-						tempAddress.FromString(host.participantIP[i]);
-					}
-
-					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, tempAddress, false);
+					host.participantsName[i] = temp->name[i];
 				}
 
 
+				// transfer the name of the recipent to the host (find it from the beginning of the message)
+				for (int i = 0; i < maxCharInName; i++)
+				{
+					if (temp->message[i] != '/n' && temp->message[i] != ' ' && temp->message[i] != -52)
+					{
+						recipientName.push_back(temp->message[i]);
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				//if ALL or all then broadcast to every
+				if (recipientName == "ALL" || recipientName == "all")
+				{
+					//loop through all addresses and send through that
+					for (unsigned int i = 0; i < currentClients; i++)
+					{
+						peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[i], false);
+					}
+				}
+				else
+				{
+					// check for the recipient address 
+					for (unsigned int i = 0; i < currentClients; i++)
+					{
+						for (int j = 0; j < recipientName.size(); j++)
+						{
+							if (recipientName[j] == host.listOfParticipantsName[i][j])
+							{
+								if (j == recipientName.size() - 1)
+								{
+									userExists = true;
+
+
+									recipientAddress = listOfParticipantAddress[i];
+									break;
+								}
+							}
+							else
+							{
+								break;
+							}
+						}
+					}
+
+					for (int j = 0; j < recipientName.size(); j++)
+					{
+						if (recipientName[j] == participant.name[j])
+						{
+							if (j == recipientName.size() - 1)
+							{
+								for (size_t i = recipientName.size(); i < maxCharInMessage; i++)
+								{
+									if (temp->message[i] != -52 || i == maxCharInMessage)
+									{
+										std::cout << temp->message[i];
+									}
+									else
+									{
+										msgToHost = true;
+										break;
+									}
+								}
+
+								break;
+							}
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					for (int i = 0; i < maxCharInMessage; i++)
+					{
+						host.messageText[i] = temp->message[i];
+					}
+
+					if (msgToHost)
+					{
+						break;
+					}
+					else
+					{
+						if (userExists)
+						{
+							//send message to corresponging recipient  system address
+
+							peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, recipientAddress, false);
+
+						}
+						else
+						{
+							// make the message say that the person does not exist 
+							//resets teh host msg
+							for (int i = 0; i < maxCharInMessage; i++)
+							{
+								host.messageText[i] = -52;
+							}
+							// message that they do not exist
+							{
+								host.AddToHostMsg('T');
+								host.AddToHostMsg('H');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('U');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('R');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('D');
+								host.AddToHostMsg('O');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('N');
+								host.AddToHostMsg('O');
+								host.AddToHostMsg('T');
+								host.AddToHostMsg(' ');
+								host.AddToHostMsg('E');
+								host.AddToHostMsg('X');
+								host.AddToHostMsg('I');
+								host.AddToHostMsg('S');
+								host.AddToHostMsg('T');
+							}
+							// send that the user does not exist
+							peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+						}
+					}
+
+				}
+
+
+				//resets teh host msg
+				for (int i = 0; i < maxCharInMessage; i++)
+				{
+					host.messageText[i] = -52;
+				}
 
 				break;
 			}
@@ -481,23 +586,27 @@ int main(void)
 				std::cout << "\nIncoming message from ";
 				for (int i = 0; i < maxCharInName; i++)
 				{
-					if (tempHost->participantsName[i] != NULL && tempHost->participantsName[i] != -52)
+					if (tempHost->participantsName[i] != NULL && tempHost->participantsName[i] != -52 && tempHost->participantsName[i] != '\n')
 					{
 						std::cout << tempHost->participantsName[i];
 					}
 				}
 				std::cout << ": \n";
-				DoMyPacketHandlerHost(packet);
+				DoMyPacketHandlerHost(tempHost);
 				break;
 			}
 			case ID_BROADCAST_USER:
 			{
 				printf("Broadcasting new user!!!\n");
+
+				listOfParticipantAddress[currentClients] = packet->systemAddress;
+
 				if (GetPacketIdentifier(packet) == ID_BROADCAST_USER)
 				{
 					RecieveClientInfo(packet, host);
 				}
 				host.typeId = ID_RECIEVE_MESSAGE;
+
 
 				// this is message to say that the user has entered the room
 				{
@@ -534,27 +643,31 @@ int main(void)
 					host.participantsName[4] = 'n';
 				}
 
-				peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+				//std::cout << "packet address" << packet->systemAddress.ToString() << std::endl;
+				for (int i = 0; i < currentClients; i++)
+				{
+					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[i], false);
+				}
 
 				for (int i = 0; i < maxCharInMessage; i++)
 				{
 					host.messageText[i] = -52;
 				}
 			}
-				break;
+			break;
 			default:
 			{
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
 			}
+
 			}
-			//serverAddress = packet->systemAddress;
-			
 		}
 
 		if (printClientsNames)
 		{
-			PrintClientNames(host);
+			PrintClientNames(host, listOfParticipantAddress);
 		}
 
 
@@ -582,21 +695,17 @@ int main(void)
 				}
 			}
 			cout << "\n";
-			if (privateMessage)
-			{
-				participant.typeId = ID_SEND_PRIVATE_MESSAGE;
-			}
-			else
-			{
-				participant.typeId = ID_SEND_PUBLIC_BROADCAST;
-			}
+			participant.typeId = ID_SEND_MESSAGE;
 
-			peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-			
+			//not working prob because of the server address
+
+			std::cout << "\nserverAddress: " << serverAddress.ToString() << std::endl;
+			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+
 
 			for (int i = 0; i < maxCharInMessage; i++)
 			{
-				//host.messageText[i] = -52;
 				participant.message[i] = -52;
 			}
 		}
@@ -604,7 +713,7 @@ int main(void)
 
 
 		GetInput(participant.message);
-		
+
 
 	}
 
@@ -614,6 +723,7 @@ int main(void)
 
 	return 0;
 }
+
 
 void GetInput(char tempMsg[])
 {
@@ -669,7 +779,7 @@ void GetInput(char tempMsg[])
 			j--;
 			tempMsg[j] = -52;
 
-			std::cout << "\b" << tempMsg[j] << "\b";
+			std::cout << "\b" << " " << "\b";
 		}
 		pressingKey = true;
 
@@ -687,12 +797,16 @@ void GetInput(char tempMsg[])
 	}
 	if (GetAsyncKeyState(VK_CONTROL) != 0)
 	{
-		if (canTypeMessage)
+		if (isServer)
 		{
-			
-			printClientsNames = true;
+			if (canTypeMessage)
+			{
+
+				printClientsNames = true;
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
+
 
 	}
 	if (GetAsyncKeyState(VK_TAB) != 0)
@@ -715,28 +829,33 @@ void GetInput(char tempMsg[])
 	}
 	if (GetAsyncKeyState(VK_PRIOR) != 0)
 	{
-		if (canTypeMessage)
+		if (!isServer)
 		{
-			//std::cout << "backspace";
-			//Console.Clear();
-			printf("send private message bitch");
-			privateMessage = true;
+			if (canTypeMessage)
+			{
+				//std::cout << "backspace";
+				//Console.Clear();
+				printf("\nsend private message\n");
+				privateMessage = true;
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
 
 	}
 	if (GetAsyncKeyState(VK_NEXT) != 0)
 	{
-		if (canTypeMessage)
+		if (!isServer)
 		{
-			//std::cout << "backspace";
-			//Console.Clear();
-			printf("send public message bitch");
-			privateMessage = false;
+			if (canTypeMessage)
+			{
+				//std::cout << "backspace";
+				//Console.Clear();
+				printf("\nsend public message\n");
+				privateMessage = false;
 
+			}
+			pressingKey = true;
 		}
-		pressingKey = true;
-
 	}
 	if (GetAsyncKeyState(VK_RETURN) != 0 && tempMsg[0] != -52)
 	{
@@ -805,29 +924,22 @@ void DoMyPacketHandlerParticipant(Packet* packet)
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
 
-void DoMyPacketHandlerHost(Packet* packet)
+void DoMyPacketHandlerHost(Host* hostPack)
 {
 	// Cast the data to the appropriate type of struct
-	Host* s = (Host*)packet->data;
 
-	if (packet->length != sizeof(Host))
+	for (int i = 0; i < maxCharInMessage; i++)
 	{
-		return;
-	}
-	else
-	{
-		for (int i = 0; i < maxCharInMessage; i++)
+		if (hostPack->messageText[i] == -52)
 		{
-			if (s->messageText[i] == -52)
-			{
-				break;
-			}
-			else
-			{
-				std::cout << s->messageText[i];
-			}
+			break;
+		}
+		else
+		{
+			std::cout << hostPack->messageText[i];
 		}
 	}
+
 
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
