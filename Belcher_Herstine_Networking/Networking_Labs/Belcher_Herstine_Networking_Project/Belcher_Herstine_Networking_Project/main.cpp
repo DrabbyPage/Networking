@@ -8,6 +8,17 @@
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"  // MessageID
 
+enum GameMessages
+{
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
+	ID_SEND_MESSAGE = ID_USER_PACKET_ENUM + 2,
+	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 3,
+	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 4,
+	ID_RECEIVE_TIC_TAC_TOE = ID_USER_PACKET_ENUM + 5,
+	ID_RECEIVE_BATTLESHIP = ID_USER_PACKET_ENUM + 6
+
+};
+
 using namespace RakNet;
 using namespace std;
 
@@ -111,10 +122,18 @@ struct Host
 };
 #pragma pack(pop)
 
+struct TicTacToeGameData
+{
+	unsigned char typeId = ID_RECEIVE_TIC_TAC_TOE;
+	char gameData[3][3];
+};
 
+struct BattleShipGameData
+{
+	unsigned char typeId = ID_RECEIVE_BATTLESHIP;
+	char gameData[10][10];
+};
 
-//#define MAX_CLIENTS 10
-//#define SERVER_PORT 60000
 
 // participant sends a msg
 // host gets it...
@@ -125,20 +144,8 @@ struct Host
 // type msg>>press enter>>send package with the id of private or broadcast message>>host gets package>>either prints to screen (if msg to host)>>
 // send msg to other person with msg ID Message receive
 
-enum GameMessages
-{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_SEND_MESSAGE = ID_USER_PACKET_ENUM + 2,
-	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 3,
-	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 4
-
-};
-
-unsigned char GetPacketIdentifier(Packet* packet);
 void DoMyPacketHandlerHost(Host* hostPack);
-void DoMyPacketHandlerParticipant(Packet* packet);
 void GetInput(char msg[]);
-void CheckKeyInput(bool keyPressed, char charUsed, char msg[]);
 
 void RecieveClientInfo(Packet* packet, Host& myHost)
 {
@@ -243,6 +250,13 @@ void DisplayHostWindow()
 // 7 8 9 
 //
 //---------------------------------------------------------------------------------
+
+// for turn based... we need to send info and wait until there is a return to do the next turn
+//
+// --------------------------------------------------------------------------------
+//
+// for battle ship the screen shows X for hits O for misses and ~ as water tiles
+
 int main(void)
 {
 	RakNet::SystemAddress serverAddress;
@@ -317,10 +331,7 @@ int main(void)
 
 		DisplayConsoleWindow();
 
-
-		serverAddress.FromString(str);
-
-		std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
+		//std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
 
 		peer->Connect(str, serverPort, 0, 0);
 	}
@@ -357,35 +368,11 @@ int main(void)
 				serverAddress = packet->systemAddress;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
-				// for testing:
-				/*
-				participant.nameOfMessageRecipient[0] = 'c';
-				participant.nameOfMessageRecipient[1] = 'a';
-				participant.nameOfMessageRecipient[2] = 'm';
-
-				//participant.typeId = ID_SEND_PRIVATE_MESSAGE; // for private
-				participant.typeId = ID_SEND_PUBLIC_BROADCAST; // for public
-
-				participant.AddToParticipantMsg('p');
-				participant.AddToParticipantMsg('l');
-				participant.AddToParticipantMsg('s');
-				participant.AddToParticipantMsg(' ');
-				participant.AddToParticipantMsg('w');
-				participant.AddToParticipantMsg('o');
-				participant.AddToParticipantMsg('r');
-				participant.AddToParticipantMsg('k');
-
-				peer->Send((const char*)& participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				*/
-
-
 				break;
 			}
 			case ID_NEW_INCOMING_CONNECTION:
 			{
 				printf("A connection is incoming.\n");
-				//if (GetPacketIdentifier(packet) == ID_CONNECTION_REQUEST_ACCEPTED/* User assigned packet identifier here */)
-
 
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
@@ -410,17 +397,6 @@ int main(void)
 				else {
 					printf("Connection to the room has been lost.\n");
 				}
-				break;
-			}
-			case ID_GAME_MESSAGE_1:
-			{
-				printf("I am in game message\n");
-
-				if (GetPacketIdentifier(packet) == ID_GAME_MESSAGE_1/* User assigned packet identifier here */)
-				{
-					//DoMyPacketHandlerClient(packet);
-				}
-
 				break;
 			}
 			case ID_SEND_MESSAGE:
@@ -616,10 +592,8 @@ int main(void)
 
 				listOfParticipantAddress[currentClients] = packet->systemAddress;
 
-				if (GetPacketIdentifier(packet) == ID_BROADCAST_USER)
-				{
-					RecieveClientInfo(packet, host);
-				}
+				RecieveClientInfo(packet, host);
+				
 				host.typeId = ID_RECIEVE_MESSAGE;
 
 
@@ -725,10 +699,7 @@ int main(void)
 			}
 		}
 
-
-
 		GetInput(participant.message);
-
 
 	}
 
@@ -748,10 +719,6 @@ void GetInput(char tempMsg[])
 
 	for (char key = ' '; key <= '~'; key++)
 	{
-		//CheckKeyInput(GetAsyncKeyState(key), key, tempMsg);
-
-
-
 		if (GetAsyncKeyState(key) != 0)
 		{
 			//			std::cout << "we are pressing button" << std::endl;
@@ -782,8 +749,7 @@ void GetInput(char tempMsg[])
 		if (canTypeMessage)
 		{
 			//std::cout << "backspace";
-			//Console.Clear();
-			for (int i = 1; i < maxCharInMessage; i++)
+]			for (int i = 1; i < maxCharInMessage; i++)
 			{
 				if (tempMsg[i] == NULL || tempMsg[i] == -52)
 				{
@@ -803,8 +769,7 @@ void GetInput(char tempMsg[])
 		if (canTypeMessage)
 		{
 			//std::cout << "backspace";
-			//Console.Clear();
-			continueLoop = false;
+]			continueLoop = false;
 		}
 		pressingKey = true;
 
@@ -888,53 +853,6 @@ void GetInput(char tempMsg[])
 	canTypeMessage = !pressingKey;
 
 
-}
-
-string GetSystemAddress(Packet* p)
-{
-	string ip = p->systemAddress.ToString();
-	return ip;
-}
-
-void CheckKeyInput(bool keyPressed, char charUsed, char msg[])
-{
-	if (keyPressed)
-	{
-		for (int i = 0; i < 256; i++)
-		{
-			if (msg[i] == NULL)
-			{
-				std::cout << charUsed << "\r";
-				msg[i] = charUsed;
-				break;
-			}
-		}
-	}
-}
-
-unsigned char GetPacketIdentifier(Packet* p)
-{
-	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
-		return (unsigned char)p->data[sizeof(unsigned char) + sizeof(unsigned long)];
-	else
-		return (unsigned char)p->data[0];
-}
-
-void DoMyPacketHandlerParticipant(Packet* packet)
-{
-	// Cast the data to the appropriate type of struct
-	Participant* s = (Participant*)packet->data;
-
-	if (packet->length != sizeof(Participant))
-	{
-		return;
-	}
-	else
-	{
-		printf(s->message);
-	}
-
-	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }
 
 void DoMyPacketHandlerHost(Host* hostPack)
