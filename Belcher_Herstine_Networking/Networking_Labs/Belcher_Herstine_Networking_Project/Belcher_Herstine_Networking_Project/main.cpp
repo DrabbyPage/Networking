@@ -7,6 +7,9 @@
 #include "Raknet/MessageIdentifiers.h"
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"  // MessageID
+#include "Battleship.h"
+#include "TicTacToe.h"
+#include "Input.h"
 
 enum GameMessages
 {
@@ -273,7 +276,7 @@ void DisplayHostWindow()
 int main(void)
 {
 	RakNet::SystemAddress serverAddress;
-
+	Input myInput = Input();
 	//char listOfUsers[maxUsers][maxCharInName];
 	RakNet::SystemAddress listOfParticipantAddress[maxUsers];
 
