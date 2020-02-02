@@ -7,20 +7,10 @@
 #include "Raknet/MessageIdentifiers.h"
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"  // MessageID
+#include "GameMessageEnums.h"	//this is where all the game messages are
 #include "Battleship.h"
-#include "TicTacToe.h"
+//#include "TicTacToe.h"
 #include "Input.h"
-
-enum GameMessages
-{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_SEND_MESSAGE = ID_USER_PACKET_ENUM + 2,
-	ID_RECIEVE_MESSAGE = ID_USER_PACKET_ENUM + 3,
-	ID_BROADCAST_USER = ID_USER_PACKET_ENUM + 4,
-	ID_RECEIVE_TIC_TAC_TOE = ID_USER_PACKET_ENUM + 5,
-	ID_RECEIVE_BATTLESHIP = ID_USER_PACKET_ENUM + 6
-
-};
 
 using namespace RakNet;
 using namespace std;
@@ -28,8 +18,8 @@ using namespace std;
 unsigned int maxClients = 2;
 unsigned short serverPort = 6000;
 
-bool canTypeMessage = true;
-bool sendUserMessage = false;
+//bool canTypeMessage = true;
+//bool sendUserMessage = false;
 
 const int maxCharInMessage = 250;
 const int maxCharInIP = 19;
@@ -39,9 +29,9 @@ const int maxUsers = 2; // make sure this is same as max Clients
 unsigned int currentClients = 0;
 bool continueLoop = true;
 
-bool printClientsNames = false;
+//bool printClientsNames = false;
 bool isServer;
-bool privateMessage = false;
+//bool privateMessage = false;
 
 #pragma pack(push, 1)
 struct Participant
@@ -125,30 +115,36 @@ struct Host
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 struct TicTacToeFullGameData
 {
-	unsigned char typeId = ID_RECEIVE_TIC_TAC_TOE;
+	unsigned char typeId;
 	char gameData[3][3];
 };
-
+#pragma pack(pop)
+#pragma pack(push, 1)
 struct BattleShipFullGameData
 {
-	unsigned char typeId = ID_RECEIVE_BATTLESHIP;
+	unsigned char typeId;
 	char gameData[10][10];
 };
-
+#pragma pack(pop)
+#pragma pack(push, 1)
 struct BattleshipData
 {
-	unsigned char typeId = ID_RECEIVE_BATTLESHIP;
+	unsigned char typeId;
 	char yPos; // has to be a letter
 	char xPos; // has to be a Number
 };
-
+#pragma pack(pop)
+#pragma pack(push, 1)
 struct TicTacToeData
 {
-	unsigned char typeId = ID_RECEIVE_TIC_TAC_TOE;
+	//should always be receiving tic tac toe full
+	unsigned char typeId;
 	char ticTacToePos; // would be a... number?
 };
+#pragma pack(pop)
 
 
 // participant sends a msg
@@ -161,7 +157,9 @@ struct TicTacToeData
 // send msg to other person with msg ID Message receive
 
 void DoMyPacketHandlerHost(Host* hostPack);
-void GetInput(char msg[]);
+void PrintBattleshipGameData(BattleShipFullGameData bsData);
+void PrintTicTacToeGameData(TicTacToeFullGameData tttData);
+char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData);
 
 void RecieveClientInfo(Packet* packet, Host& myHost)
 {
@@ -223,28 +221,11 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 		std::cout << "No clients" << endl;
 	}
 	printf("\n");
-	printClientsNames = false;
+	//printClientsNames = false;
+	
 }
 
-void DisplayConsoleWindow()
-{
-	printf("\033[36m");
-	printf("-------------------------------------Console Window-------------------------------------\n");
-	printf("\033[35m");
-	printf("-----ESC: Leave Chat   PAGEUP: Send private message   PAGEDOWN: Send public message-----\n");
-	printf("------------------------------TAB: Open Console Window----------------------------------\n");
-	printf("\033[0m");
-}
 
-void DisplayHostWindow()
-{
-	printf("\033[31m");
-	printf("-------------------------Admin Console Window-------------------------------\n");
-	printf("\033[32m");
-	printf("----------------ESC: Close Program   TAB: Open Console window---------------\n");
-	printf("-------------------CTRL: Print user names and IP addresses------------------\n");
-	printf("\033[0m");
-}
 
 // so instead of sending host information we should create a package of game data
 // for both the battleship and the tic tac toe we will send coordinate data 
@@ -276,7 +257,7 @@ void DisplayHostWindow()
 int main(void)
 {
 	RakNet::SystemAddress serverAddress;
-	Input myInput = Input();
+	Input myInput;
 	//char listOfUsers[maxUsers][maxCharInName];
 	RakNet::SystemAddress listOfParticipantAddress[maxUsers];
 
@@ -305,6 +286,7 @@ int main(void)
 		SocketDescriptor sd;
 		peer->Startup(1, &sd, 1);
 		isServer = false;
+		myInput.setIsServer(isServer);
 		for (int i = 0; i < maxCharInName; i++)
 		{
 			participant.name[i] = tempName[i];
@@ -314,7 +296,7 @@ int main(void)
 		SocketDescriptor sd(serverPort, 0);
 		peer->Startup(maxClients, &sd, 1);
 		isServer = true;
-
+		myInput.setIsServer(isServer);
 		for (int i = 0; i < maxCharInName; i++)
 		{
 			participant.name[i] = tempName[i];
@@ -325,8 +307,9 @@ int main(void)
 	{
 		printf("Starting the chat room for ");
 		printf(&participant.name[0]);
-
-		DisplayHostWindow();
+		myInput.setIsServer(isServer);
+		myInput.DisplayHostWindow();
+		//DisplayHostWindow();
 
 		// how do we get our IP address
 		// We need to let the server accept incoming connections from the clients
@@ -344,8 +327,9 @@ int main(void)
 		}
 		printf("Connecting to the chat room for ");
 		printf(&participant.name[0]);
-
-		DisplayConsoleWindow();
+		myInput.setIsServer(isServer);
+		myInput.DisplayConsoleWindow();
+		//DisplayConsoleWindow();
 
 		//std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
 
@@ -670,15 +654,17 @@ int main(void)
 			}
 		}
 
-		if (printClientsNames)
+		if (myInput.getPrintClientsNames())
 		{
 			PrintClientNames(host, listOfParticipantAddress);
+			myInput.setPrintClientsNames(false);
 		}
 
 
-		if (sendUserMessage)
+		if (myInput.getSendUserMessage())
 		{
-			sendUserMessage = false;
+			myInput.setSendUserMessage(false);
+			//sendUserMessage = false;
 			// will send the msg
 			// will send the name of the person from
 			// will need to send who to as well
@@ -714,8 +700,11 @@ int main(void)
 				participant.message[i] = -52;
 			}
 		}
-
-		GetInput(participant.message);
+		myInput.setIsServer(isServer);
+		myInput.setMaxCharInMessage(maxCharInMessage);
+		continueLoop = myInput.getContinueLoop();
+		myInput.GetInput(participant.message);
+		//GetInput(participant.message);
 
 	}
 
@@ -726,147 +715,6 @@ int main(void)
 	return 0;
 }
 
-void GetInput(char tempMsg[])
-{
-	//std::cout<<GetAsyncKeyState('A');
-
-	int j = 0;
-	bool pressingKey = false;
-
-	for (char key = ' '; key <= '~'; key++)
-	{
-		if (GetAsyncKeyState(key) != 0)
-		{
-			//			std::cout << "we are pressing button" << std::endl;
-			if (canTypeMessage)
-			{
-				for (int i = 0; i < maxCharInMessage; i++)
-				{
-					if (tempMsg[i] == -52 || tempMsg[i] == NULL)
-					{
-						//std::cout << key;
-						canTypeMessage = false;
-						tempMsg[i] = key;
-						std::cout << tempMsg[i];
-						j++;
-						break;
-					}
-
-				}
-			}
-			pressingKey = true;
-
-
-			break;
-		}
-	}
-	if (GetAsyncKeyState(VK_BACK) != 0)
-	{
-		if (canTypeMessage)
-		{
-			//std::cout << "backspace";
-			for (int i = 1; i < maxCharInMessage; i++)
-			{
-				if (tempMsg[i] == NULL || tempMsg[i] == -52)
-				{
-					tempMsg[i - 1] = -52;
-				}
-			}
-			j--;
-			tempMsg[j] = -52;
-
-			std::cout << "\b" << " " << "\b";
-		}
-		pressingKey = true;
-
-	}
-	if (GetAsyncKeyState(VK_ESCAPE) != 0)
-	{
-		if (canTypeMessage)
-		{
-			//std::cout << "backspace";
-			continueLoop = false;
-		}
-		pressingKey = true;
-
-	}
-	if (GetAsyncKeyState(VK_CONTROL) != 0)
-	{
-		if (isServer)
-		{
-			if (canTypeMessage)
-			{
-
-				printClientsNames = true;
-			}
-			pressingKey = true;
-		}
-
-
-	}
-	if (GetAsyncKeyState(VK_TAB) != 0)
-	{
-		if (canTypeMessage)
-		{
-			//std::cout << "backspace";
-			if (isServer)
-			{
-				DisplayHostWindow();
-			}
-			else
-			{
-				DisplayConsoleWindow();
-			}
-		}
-		pressingKey = true;
-
-	}
-	if (GetAsyncKeyState(VK_PRIOR) != 0)
-	{
-		if (!isServer)
-		{
-			if (canTypeMessage)
-			{
-				//std::cout << "backspace";
-				printf("\nsend private message\n");
-				privateMessage = true;
-			}
-			pressingKey = true;
-		}
-
-	}
-	if (GetAsyncKeyState(VK_NEXT) != 0)
-	{
-		if (!isServer)
-		{
-			if (canTypeMessage)
-			{
-				//std::cout << "backspace";
-				printf("\nsend public message\n");
-				privateMessage = false;
-
-			}
-			pressingKey = true;
-		}
-	}
-	if (GetAsyncKeyState(VK_RETURN) != 0 && tempMsg[0] != -52)
-	{
-		if (canTypeMessage)
-		{
-			// send the message
-			sendUserMessage = true;
-			//return true;
-		}
-		pressingKey = true;
-	}
-	else
-	{
-		sendUserMessage = false;
-	}
-	canTypeMessage = !pressingKey;
-
-
-}
 
 void DoMyPacketHandlerHost(Host* hostPack)
 {
@@ -898,8 +746,8 @@ void PrintBattleshipGameData(BattleShipFullGameData bsData)
 	}
 	std::cout << std::endl;
 	//
-
-	for (int i = 0, char side = 'a'; i < 9; i++, side++)
+	char side = 'a';
+	for (int i = 0; i < 9; i++)
 	{
 		// a b c d e f g h (side) (the start of teh line that is)
 		std::cout << side << " ";
@@ -910,6 +758,7 @@ void PrintBattleshipGameData(BattleShipFullGameData bsData)
 			std::cout << bsData.gameData[i][j] << " ";
 		}
 		std::cout << std::endl;
+		side++;
 	}
 }
 

@@ -9,7 +9,7 @@ Input::Input()
 {
 	canTypeMessage = false;
 	maxCharInMessage = false;
-	continueLoop = false;
+	continueLoop = true;
 	isServer = false;
 	printClientsNames = false;
 	privateMessage = false;
