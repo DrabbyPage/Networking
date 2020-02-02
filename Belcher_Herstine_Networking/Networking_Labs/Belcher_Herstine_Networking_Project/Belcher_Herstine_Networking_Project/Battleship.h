@@ -1,1 +1,79 @@
-#pragma once
+
+
+#ifndef BATTLESHIP
+#define BATTLESHIP
+
+// should always be type id ID_RECEIVE_BATTLESHIP_FULL !!!
+struct BattleShipFullGameData
+{
+	unsigned char typeId;
+	char gameData[10][10]; // [letter] [number]
+};
+
+
+//should always be type id ID_RECEIVE_BATTLESHIP !!!
+struct BattleshipData
+{
+	unsigned char typeId;
+	char yPos; // has to be a letter
+	char xPos; // has to be a Number
+};
+
+
+struct ShipData
+{
+	bool isSunk;
+	char posX; // should be a number (Start of the ship)
+	char posY; // should be a letter (start of teh ship)
+	bool isHorizontal; // true = horizonal, false = vertical
+	int sizeOfShip; // value between 3-5
+};
+
+
+class BattleshipManager
+{
+public:
+	BattleshipManager();
+	~BattleshipManager();
+
+	void AddShip(ShipData newShip);
+	bool CheckLossOfPlayer();
+	void CheckHitOfShip(char shotPosX, char shotPosY);
+
+private:
+	ShipData listOfShips[4];
+};
+
+
+void PrintBattleshipGameData(BattleShipFullGameData bsData)
+{
+	// 1 2 3 4 5 6 7 8 (the top of the battle ship game
+	std::cout << " ";
+	for (unsigned int i = 0; i < 9; i++)
+	{
+		std::cout << i << " ";
+	}
+	std::cout << std::endl;
+	//
+	// a b c d e f g h
+	char side = 'a';
+	for (unsigned int i = 0; i < 9; i++)
+	{
+		// a b c d e f g h (side) (the start of teh line that is)
+		std::cout << side << " ";
+
+		// orint the rest of the line data
+		for (int j = 0; j < 9; j++)
+		{
+			std::cout << bsData.gameData[i][j] << " ";
+		}
+		std::cout << std::endl;
+		side++;
+	}
+}
+
+
+
+
+
+#endif

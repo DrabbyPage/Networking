@@ -1,9 +1,9 @@
 
-
+#include "GameMessageEnums.h"
 #ifndef TIC_TAC_TOE
 #define TIC_TAC_TOE
 
-// type id should ALWAYS BE RECEIVE TIC TAC TOE FULL
+// type id should ALWAYS BE RECEIVE TIC_TAC_TOE_FULL
 struct TicTacToeFullGameData
 {
 	unsigned char typeId;
@@ -35,7 +35,7 @@ void PrintTicTacToeGameData(TicTacToeFullGameData tttData)
 // will return X, O or... i think -52 when using this X is for p1 O for p2 -52 for no input
 char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 {
-	char winner;
+	char winner = -52;
 
 	// any of the rows is same
 	for (int i = 0; i <= 2; i++)
@@ -85,6 +85,8 @@ char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 			}
 		}
 	}
+
+	return winner;
 }
 
 
