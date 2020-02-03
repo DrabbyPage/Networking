@@ -1,21 +1,25 @@
-
+#include <iostream>
 #include "GameMessageEnums.h"
 #ifndef TIC_TAC_TOE
 #define TIC_TAC_TOE
 
 // type id should ALWAYS BE RECEIVE TIC_TAC_TOE_FULL
+#pragma pack(push, 1)
 struct TicTacToeFullGameData
 {
 	unsigned char typeId;
 	char gameData[3][3];
 };
+#pragma pack(pop)
 
 // type id should always be ID_RECEIVE_TIC_TAC_TOE
+#pragma pack(push, 1)
 struct TicTacToeData
 {
 	unsigned char typeId;
 	char ticTacToePos; // would be a... number?
 };
+#pragma pack(pop)
 
 
 void PrintTicTacToeGameData(TicTacToeFullGameData tttData)

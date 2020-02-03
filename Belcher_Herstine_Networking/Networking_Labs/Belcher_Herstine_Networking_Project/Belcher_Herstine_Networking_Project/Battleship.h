@@ -4,20 +4,24 @@
 #define BATTLESHIP
 
 // should always be type id ID_RECEIVE_BATTLESHIP_FULL !!!
+#pragma pack(push, 1)
 struct BattleShipFullGameData
 {
 	unsigned char typeId;
 	char gameData[10][10]; // [letter] [number]
 };
+#pragma pack(pop)
 
 
 //should always be type id ID_RECEIVE_BATTLESHIP !!!
+#pragma pack(push, 1)
 struct BattleshipData
 {
 	unsigned char typeId;
 	char yPos; // has to be a letter
 	char xPos; // has to be a Number
 };
+#pragma pack(pop)
 
 
 struct ShipData
@@ -41,7 +45,8 @@ public:
 	void CheckHitOfShip(char shotPosX, char shotPosY);
 
 private:
-	ShipData listOfShips[4];
+	static const int amountOfShips = 4;
+	ShipData listOfShips[amountOfShips];
 };
 
 
@@ -71,9 +76,6 @@ void PrintBattleshipGameData(BattleShipFullGameData bsData)
 		side++;
 	}
 }
-
-
-
 
 
 #endif
