@@ -38,6 +38,7 @@ private:
 	bool printClientsNames;
 	bool privateMessage;
 	bool sendUserMessage;
+	char lastKeyPressed;
 
 };
 

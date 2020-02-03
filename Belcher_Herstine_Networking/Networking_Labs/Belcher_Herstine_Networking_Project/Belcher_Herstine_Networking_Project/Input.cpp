@@ -121,17 +121,20 @@ void Input::GetInput(char tempMsg[])
 
 		for (char key = ' '; key <= '~'; key++)
 		{
+			// if there is a key press 
 			if (GetAsyncKeyState(key) != 0)
 			{
-				//			std::cout << "we are pressing button" << std::endl;
-				if (canTypeMessage)
+				// if we can type OR the key we hit is not the last one (added for faster typers)
+				if (canTypeMessage || lastKeyPressed != key)
 				{
+					// loop through message and add the key to the list if there is room
 					for (int i = 0; i < maxCharInMessage; i++)
 					{
 						if (tempMsg[i] == -52 || tempMsg[i] == NULL)
 						{
 							//std::cout << key;
 							canTypeMessage = false;
+							lastKeyPressed = key;
 							tempMsg[i] = key;
 							std::cout << tempMsg[i];
 							j++;
@@ -170,7 +173,6 @@ void Input::GetInput(char tempMsg[])
 		{
 			if (canTypeMessage)
 			{
-				//std::cout << "backspace";
 				continueLoop = false;
 			}
 			pressingKey = true;
