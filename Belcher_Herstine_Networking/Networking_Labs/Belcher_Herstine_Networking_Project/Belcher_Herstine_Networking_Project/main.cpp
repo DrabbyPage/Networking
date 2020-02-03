@@ -180,14 +180,14 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 			{
 				std::cout << listOfAddress[k].ToString();
 			}
-			printf("\n");
+			std::printf("\n");
 		}
 	}
 	else
 	{
 		std::cout << "No clients" << endl;
 	}
-	printf("\n");
+	std::printf("\n");
 	//printClientsNames = false;
 	
 }
@@ -236,7 +236,7 @@ int main(void)
 
 	char tempName[maxCharInName];
 	string checking;
-	printf("Please enter you name (must be within 12 Characters):\n");
+	std::printf("Please enter you name (must be within 12 Characters):\n");
 	//std::cin >> checking;
 	fgets(tempName, 12, stdin);
 
@@ -250,7 +250,7 @@ int main(void)
 	RakNet::Packet* packet;
 
 	// asking if going to be a server or join another
-	printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
+	std::printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
 	fgets(str, 512, stdin);
 	if ((str[0] == 'j') || (str[0] == 'J'))
 	{
@@ -277,8 +277,8 @@ int main(void)
 	// starting server and joining teh server through input
 	if (isServer)
 	{
-		printf("Starting the chat room for ");
-		printf(&participant.name[0]);
+		std::printf("Starting the chat room for ");
+		std::printf(&participant.name[0]);
 		myInput.setIsServer(isServer);
 		myInput.DisplayHostWindow();
 		//DisplayHostWindow();
@@ -292,13 +292,13 @@ int main(void)
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
 	else {
-		printf("Enter server IP or hit enter for 127.0.0.1\n");
+		std::printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
 		if (str[0] == 10) {
 			strcpy(str, "127.0.0.1");
 		}
-		printf("Connecting to the chat room for ");
-		printf(&participant.name[0]);
+		std::printf("Connecting to the chat room for ");
+		std::printf(&participant.name[0]);
 		myInput.setIsServer(isServer);
 		myInput.DisplayConsoleWindow();
 		//DisplayConsoleWindow();
@@ -319,22 +319,22 @@ int main(void)
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 			{
-				printf("Another client has disconnected.\n");
+				std::printf("Another client has disconnected.\n");
 				break;
 			}
 			case ID_REMOTE_CONNECTION_LOST:
 			{
-				printf("Another client has lost the connection.\n");
+				std::printf("Another client has lost the connection.\n");
 				break;
 			}
 			case ID_REMOTE_NEW_INCOMING_CONNECTION:
 			{
-				printf("Another client has connected.\n");
+				std::printf("Another client has connected.\n");
 				break;
 			}
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
-				printf("Our connection request has been accepted.\n");
+				std::printf("Our connection request has been accepted.\n");
 				participant.typeId = ID_BROADCAST_USER;
 				serverAddress = packet->systemAddress;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -343,32 +343,32 @@ int main(void)
 			}
 			case ID_NEW_INCOMING_CONNECTION:
 			{
-				printf("A connection is incoming.\n");
+				std::printf("A connection is incoming.\n");
 
 				break;
 			}
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
 			{
-				printf("The chat room is full.\n");
+				std::printf("The chat room is full.\n");
 				break;
 			}
 			case ID_DISCONNECTION_NOTIFICATION:
 			{
 				if (isServer) {
-					printf("A client has disconnected.\n");
+					std::printf("A client has disconnected.\n");
 				}
 				else {
-					printf("We have been disconnected from the host.\n");
+					std::printf("We have been disconnected from the host.\n");
 				}
 				break;
 			}
 			case ID_CONNECTION_LOST:
 			{
 				if (isServer) {
-					printf("A client lost the connection.\n");
+					std::printf("A client lost the connection.\n");
 				}
 				else {
-					printf("Connection to the room has been lost.\n");
+					std::printf("Connection to the room has been lost.\n");
 				}
 				break;
 			}
@@ -377,7 +377,7 @@ int main(void)
 				// will only go to the host which then will send a host package with the info
 				// info data will be ID_RECIEVE MESSAGE
 
-				printf("\nHost Received Message To Send\n");
+				std::printf("\nHost Received Message To Send\n");
 
 				// make the id to send to the recipient
 				host.typeId = ID_RECIEVE_MESSAGE;
@@ -545,7 +545,7 @@ int main(void)
 			case ID_RECIEVE_MESSAGE:
 			{
 				// receives the server's msg and prints to screen
-				printf("\n incoming message: \n");
+				std::printf("\n incoming message: \n");
 				tempHost = (Host*)packet->data;
 				std::cout << "\nIncoming message from ";
 				for (int i = 0; i < maxCharInName; i++)
@@ -561,7 +561,7 @@ int main(void)
 			}
 			case ID_BROADCAST_USER:
 			{
-				printf("Broadcasting new user!!!\n");
+				std::printf("Broadcasting new user!!!\n");
 
 				listOfParticipantAddress[currentClients] = packet->systemAddress;
 
@@ -636,7 +636,7 @@ int main(void)
 			}
 			default:
 			{
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
+				std::printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
 			}
 
@@ -649,39 +649,170 @@ int main(void)
 			myInput.setPrintClientsNames(false);
 		}
 
-
+		// sending the msg
 		if (myInput.getSendUserMessage())
 		{
-			myInput.setSendUserMessage(false);
-			//sendUserMessage = false;
-			// will send the msg
-			// will send the name of the person from
-			// will need to send who to as well
-			// the ID will either be broadcast or private
-			// testing:
-
-
-			cout << "\nSending message: \n";
-
-			for (int i = 0; i < maxCharInMessage; i++)
+			if (!isServer)
 			{
-				if (participant.message[i] == -52)
+				myInput.setSendUserMessage(false);
+				//sendUserMessage = false;
+				// will send the msg
+				// will send the name of the person from
+				// will need to send who to as well
+				// the ID will either be broadcast or private
+				// testing:
+
+
+				cout << "\nSending message: \n";
+
+				for (int i = 0; i < maxCharInMessage; i++)
 				{
-					break;
+					if (participant.message[i] == -52)
+					{
+						break;
+					}
+					else
+					{
+						cout << participant.message[i];
+					}
+				}
+				cout << "\n";
+				participant.typeId = ID_SEND_MESSAGE;
+
+				//not working prob because of the server address
+
+				std::cout << "\nserverAddress: " << serverAddress.ToString() << std::endl;
+				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+			}
+			else
+			{
+				// make the id to send to the recipient
+				host.typeId = ID_RECIEVE_MESSAGE;
+
+				std::string recipientName;
+				std::string recipientStringAddress[maxCharInIP];
+				RakNet::SystemAddress recipientAddress;
+				bool userExists = false;
+				bool msgToHost = false;
+
+
+				// ge the message and get the name from the message... 
+
+				// transfer the name of participant to the host
+				for (int i = 0; i < maxCharInName; i++)
+				{
+					host.participantsName[i] = host.userName[i];// ->name[i];
+				}
+
+
+				// transfer the name of the recipent to the host (find it from the beginning of the message)
+				for (int i = 0; i < maxCharInName; i++)
+				{
+					if (participant.message[i] != '\n' && participant.message[i] != ' ' && participant.message[i] != -52)
+					{
+						recipientName.push_back(participant.message[i]);
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				//if ALL or all then broadcast to every
+				if (recipientName == "ALL" || recipientName == "all")
+				{
+					//loop through all addresses and send through that
+					for (unsigned int i = 0; i < currentClients; i++)
+					{
+						peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[i], false);
+					}
 				}
 				else
 				{
-					cout << participant.message[i];
+					// check for the recipient address 
+					for (unsigned int i = 0; i < currentClients; i++)
+					{
+						for (int j = 0; j < recipientName.size(); j++)
+						{
+							if (recipientName[j] == host.listOfParticipantsName[i][j])
+							{
+								if (j == recipientName.size() - 1)
+								{
+									userExists = true;
+
+
+									recipientAddress = listOfParticipantAddress[i];
+									break;
+								}
+							}
+							else
+							{
+								break;
+							}
+						}
+					}
+
+					for (int j = 0; j < recipientName.size(); j++)
+					{
+						if (recipientName[j] == participant.name[j])
+						{
+							if (j == recipientName.size() - 1)
+							{
+								for (size_t i = recipientName.size(); i < maxCharInMessage; i++)
+								{
+									if (participant.message[i] != -52 || i == maxCharInMessage)
+									{
+										std::cout << participant.message[i];
+									}
+									else
+									{
+										msgToHost = true;
+										break;
+									}
+								}
+
+								break;
+							}
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					for (int i = 0; i < maxCharInMessage; i++)
+					{
+						host.messageText[i] = participant.message[i];
+					}
+
+					if (userExists)
+					{
+						//send message to corresponging recipient  system address
+
+						peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, recipientAddress, false);
+
+					}
+					else
+					{
+						// make the message say that the person does not exist 
+						//resets teh host msg
+						std::cout << "The User Does Not Exist" << std::endl;
+						for (int i = 0; i < maxCharInMessage; i++)
+						{
+							host.messageText[i] = -52;
+						}
+					}
+
+				}
+
+
+				//resets teh host msg
+				for (int i = 0; i < maxCharInMessage; i++)
+				{
+					host.messageText[i] = -52;
 				}
 			}
-			cout << "\n";
-			participant.typeId = ID_SEND_MESSAGE;
-
-			//not working prob because of the server address
-
-			std::cout << "\nserverAddress: " << serverAddress.ToString() << std::endl;
-			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-
 
 
 			for (int i = 0; i < maxCharInMessage; i++)
@@ -689,6 +820,7 @@ int main(void)
 				participant.message[i] = -52;
 			}
 		}
+
 		myInput.setIsServer(isServer);
 		myInput.setMaxCharInMessage(maxCharInMessage);
 		continueLoop = myInput.getContinueLoop();
@@ -697,7 +829,7 @@ int main(void)
 
 	}
 
-	printf("im done lol");
+	std::printf("im done lol");
 
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
