@@ -231,8 +231,8 @@ int main(void)
 	Host host;
 	Participant participant;
 
-	BattleshipManager battleshipGame;
-	TicTacToeFullGameData ticTacToeGame;
+	//BattleshipManager battleshipGame;
+	//TicTacToeFullGameData ticTacToeGame;
 
 	char tempName[maxCharInName];
 	string checking;
@@ -607,7 +607,7 @@ int main(void)
 
 
 				//std::cout << "packet address" << packet->systemAddress.ToString() << std::endl;
-				for (int i = 0; i < currentClients; i++)
+				for (unsigned int i = 0; i < currentClients; i++)
 				{
 					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[i], false);
 				}
