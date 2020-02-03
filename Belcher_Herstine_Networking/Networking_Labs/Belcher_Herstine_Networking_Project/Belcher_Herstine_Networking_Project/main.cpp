@@ -228,17 +228,20 @@ int main(void)
 	//char listOfUsers[maxUsers][maxCharInName];
 	RakNet::SystemAddress listOfParticipantAddress[maxUsers];
 
+	Host host;
+	Participant participant;
+
+	BattleshipManager battleshipGame;
+	TicTacToeFullGameData ticTacToeGame;
+
 	char tempName[maxCharInName];
 	string checking;
 	printf("Please enter you name (must be within 12 Characters):\n");
 	//std::cin >> checking;
 	fgets(tempName, 12, stdin);
 
-	std::cout << endl;
+	std::cout << std::endl;
 
-
-	Host host;
-	Participant participant;
 	// get key state and then addd the state of teh key board to an array for messaging
 
 	char str[512];
@@ -246,6 +249,7 @@ int main(void)
 	//bool isServer;
 	RakNet::Packet* packet;
 
+	// asking if going to be a server or join another
 	printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
 	fgets(str, 512, stdin);
 	if ((str[0] == 'j') || (str[0] == 'J'))
@@ -270,6 +274,7 @@ int main(void)
 		}
 	}
 
+	// starting server and joining teh server through input
 	if (isServer)
 	{
 		printf("Starting the chat room for ");
@@ -307,7 +312,6 @@ int main(void)
 	// TODO - Add code body here
 	while (continueLoop)
 	{
-		Participant* tempPart;
 		Host* tempHost;
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
@@ -342,7 +346,9 @@ int main(void)
 				printf("A connection is incoming.\n");
 
 				break;
+			}
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
+			{
 				printf("The chat room is full.\n");
 				break;
 			}
@@ -396,7 +402,7 @@ int main(void)
 				// transfer the name of the recipent to the host (find it from the beginning of the message)
 				for (int i = 0; i < maxCharInName; i++)
 				{
-					if (temp->message[i] != '/n' && temp->message[i] != ' ' && temp->message[i] != -52)
+					if (temp->message[i] != '\n' && temp->message[i] != ' ' && temp->message[i] != -52)
 					{
 						recipientName.push_back(temp->message[i]);
 					}
@@ -612,6 +618,22 @@ int main(void)
 				}
 			}
 			break;
+			case ID_RECEIVE_BATTLESHIP:
+			{
+				break;
+			}
+			case ID_RECEIVE_BATTLESHIP_FULL:
+			{
+				break;
+			}
+			case ID_RECEIVE_TIC_TAC_TOE:
+			{
+				break;
+			}
+			case ID_RECEIVE_TICTACTOE_FULL:
+			{
+				break;
+			}
 			default:
 			{
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
