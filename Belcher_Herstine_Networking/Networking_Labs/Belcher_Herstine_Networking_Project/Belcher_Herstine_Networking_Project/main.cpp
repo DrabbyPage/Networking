@@ -21,8 +21,8 @@ unsigned short serverPort = 6000;
 //bool canTypeMessage = true;
 //bool sendUserMessage = false;
 
-bool playBattleship;
-bool playTicTacToe;
+bool playBattleship = false;
+bool playTicTacToe = true;
 
 bool isSpectator;
 bool isClient;
@@ -134,7 +134,6 @@ struct Host
 // send msg to other person with msg ID Message receive
 
 void DoMyPacketHandlerHost(Host* hostPack);
-void PrintBattleshipGameData(BattleShipFullGameData bsData);
 
 void RecieveClientInfo(Packet* packet, Host& myHost)
 {
@@ -240,9 +239,11 @@ int main(void)
 	Participant participant;
 
 	//BattleshipManager battleshipManager;
-	//TicTacToeFullGameData ticTacToeManager;
+	TicTacToeFullGameData ticTacToeManager = TicTacToeFullGameData();
+	ticTacToeManager.FillTicTacToe();
+	
 
-	TicTacToe ticTacToeManager;
+	//TicTacToe ticTacToeManager;
 
 	char tempName[maxCharInName];
 	string checking;
@@ -366,9 +367,14 @@ int main(void)
 			}
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
+				// broadcast that the user has joined 
 				std::printf("Our connection request has been accepted.\n");
 				participant.typeId = ID_BROADCAST_USER;
 				serverAddress = packet->systemAddress;
+				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+				//  have the host choose the game type
+				participant.typeId = ID_SET_GAME_TYPE;
 				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
 				break;
@@ -637,9 +643,6 @@ int main(void)
 					host.participantsName[3] = 'i';
 					host.participantsName[4] = 'n';
 				}
-
-					host.typeId = ID_SET_GAME_TYPE;
-					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				
 				host.typeId = ID_RECIEVE_MESSAGE;
 				//std::cout << "packet address" << packet->systemAddress.ToString() << std::endl;
@@ -870,7 +873,7 @@ int main(void)
 				}
 			}
 
-
+			// reset the message for the next time
 			for (int i = 0; i < maxCharInMessage; i++)
 			{
 				participant.message[i] = -52;
@@ -882,10 +885,11 @@ int main(void)
 			//do tictactoe
 			if (!turnDone)
 			{
-				ticTacToeManager.PrintBoard();
+				PrintTicTacToeGameData(ticTacToeManager);
 				turnDone = true;
 			}
 
+			
 
 		}
 		else //battleship

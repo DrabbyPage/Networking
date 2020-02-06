@@ -1,14 +1,22 @@
 #include "TicTacToe.h"
 
-void TicTacToe::PrintBoard()
+void PrintTicTacToeGameData(TicTacToeFullGameData tttData)
 {
-	int num = 1;
+	int num = 0;
+	std::cout << std::endl;
 	for (int i = 0; i < 3; i++)
 	{
 		std::cout << " ";
 		for (int j = 0; j < 3; j++)
 		{
-			std::cout << num<< " ";
+			if (tttData.gameData[i][j] != -52)
+			{
+				std::cout << tttData.gameData[i][j] << " ";
+			}
+			else
+			{
+				std::cout << num << " ";
+			}
 			num++;
 		}
 		std::cout << std::endl;
@@ -16,22 +24,8 @@ void TicTacToe::PrintBoard()
 }
 
 
-void TicTacToe::PrintTicTacToeGameData(TicTacToeFullGameData tttData)
-{
-	for (int i = 0; i < 3; i++)
-	{
-		std::cout << " ";
-		for (int j = 0; j < 3; j++)
-		{
-			std::cout << tttData.gameData[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}
-}
-
-
 // will return X, O or... i think -52 when using this X is for p1 O for p2 -52 for no input
-char TicTacToe::CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
+char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 {
 	char winner = -52;
 
@@ -86,3 +80,6 @@ char TicTacToe::CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 
 	return winner;
 }
+
+
+
