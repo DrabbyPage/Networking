@@ -15,16 +15,24 @@
 using namespace RakNet;
 using namespace std;
 
-unsigned int maxClients = 2;
+unsigned int maxClients = 4;
 unsigned short serverPort = 6000;
 
 //bool canTypeMessage = true;
 //bool sendUserMessage = false;
 
+bool playBattleship;
+bool playTicTacToe;
+
+bool isSpectator;
+bool isClient;
+
+bool turnDone = false;
+
 const int maxCharInMessage = 250;
 const int maxCharInIP = 19;
 const int maxCharInName = 12;
-const int maxUsers = 2; // make sure this is same as max Clients
+const int maxUsers = 4; // make sure this is same as max Clients
 
 unsigned int currentClients = 0;
 bool continueLoop = true;
@@ -189,7 +197,7 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 	}
 	std::printf("\n");
 	//printClientsNames = false;
-	
+
 }
 
 
@@ -219,7 +227,7 @@ void PrintClientNames(Host& myHost, RakNet::SystemAddress listOfAddress[])
 //
 // --------------------------------------------------------------------------------
 //
-// for battle ship the screen shows X for hits O for misses and ~ as water tiles
+// for battle ship the screen shows X for hits O for misses and ~ as water tiles and # for a ship
 
 int main(void)
 {
@@ -231,8 +239,10 @@ int main(void)
 	Host host;
 	Participant participant;
 
-	//BattleshipManager battleshipGame;
-	//TicTacToeFullGameData ticTacToeGame;
+	//BattleshipManager battleshipManager;
+	//TicTacToeFullGameData ticTacToeManager;
+
+	TicTacToe ticTacToeManager;
 
 	char tempName[maxCharInName];
 	string checking;
@@ -250,7 +260,7 @@ int main(void)
 	RakNet::Packet* packet;
 
 	// asking if going to be a server or join another
-	std::printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host or \"j\" to Join\n");
+	std::printf("(H)ost or (J)oin a Server?\nPlease Enter \"h\" to Host, \"j\" to Join, \"s\" to spectate\n");
 	fgets(str, 512, stdin);
 	if ((str[0] == 'j') || (str[0] == 'J'))
 	{
@@ -258,15 +268,29 @@ int main(void)
 		peer->Startup(1, &sd, 1);
 		isServer = false;
 		myInput.setIsServer(isServer);
+		isClient = true;
 		for (int i = 0; i < maxCharInName; i++)
 		{
 			participant.name[i] = tempName[i];
 		}
 	}
-	else {
+	else if ((str[0] == 'h') || (str[0] == 'H')) {
 		SocketDescriptor sd(serverPort, 0);
 		peer->Startup(maxClients, &sd, 1);
 		isServer = true;
+		myInput.setIsServer(isServer);
+		for (int i = 0; i < maxCharInName; i++)
+		{
+			participant.name[i] = tempName[i];
+		}
+	}
+	else
+	{
+		//spectator stuff
+		isSpectator = true;
+		SocketDescriptor sd(serverPort, 0);
+		peer->Startup(maxClients, &sd, 1);
+		isServer = false;
 		myInput.setIsServer(isServer);
 		for (int i = 0; i < maxCharInName; i++)
 		{
@@ -277,21 +301,17 @@ int main(void)
 	// starting server and joining teh server through input
 	if (isServer)
 	{
+		std::printf("You are a host!\n");
 		std::printf("Starting the chat room for ");
 		std::printf(&participant.name[0]);
-		myInput.setIsServer(isServer);
+		//myInput.setIsServer(isServer);
 		myInput.DisplayHostWindow();
-		//DisplayHostWindow();
-
-		// how do we get our IP address
-		// We need to let the server accept incoming connections from the clients
-
-
-		//std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
 
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
-	else {
+	else if (isClient)
+	{
+		std::printf("You are a player!\n");
 		std::printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
 		if (str[0] == 10) {
@@ -299,11 +319,23 @@ int main(void)
 		}
 		std::printf("Connecting to the chat room for ");
 		std::printf(&participant.name[0]);
-		myInput.setIsServer(isServer);
+		//myInput.setIsServer(isServer);
 		myInput.DisplayConsoleWindow();
-		//DisplayConsoleWindow();
 
-		//std::cout << "\nserver address:" << serverAddress.ToString() << std::endl;
+		peer->Connect(str, serverPort, 0, 0);
+	}
+	else
+	{
+		std::printf("You are a spectator!\n");
+		std::printf("Enter server IP or hit enter for 127.0.0.1\n");
+		fgets(str, 512, stdin);
+		if (str[0] == 10) {
+			strcpy(str, "127.0.0.1");
+		}
+		std::printf("Connecting to the chat room for ");
+		std::printf(&participant.name[0]);
+		//myInput.setIsServer(isServer);
+		myInput.DisplayConsoleWindow();
 
 		peer->Connect(str, serverPort, 0, 0);
 	}
@@ -566,8 +598,8 @@ int main(void)
 				listOfParticipantAddress[currentClients] = packet->systemAddress;
 
 				RecieveClientInfo(packet, host);
+
 				
-				host.typeId = ID_RECIEVE_MESSAGE;
 
 
 				// this is message to say that the user has entered the room
@@ -597,6 +629,7 @@ int main(void)
 					host.AddToHostMsg('n');
 					host.AddToHostMsg('e');
 					host.AddToHostMsg('d');
+					host.AddToHostMsg('\n');
 
 					host.participantsName[0] = 'a';
 					host.participantsName[1] = 'd';
@@ -605,7 +638,10 @@ int main(void)
 					host.participantsName[4] = 'n';
 				}
 
-
+					host.typeId = ID_SET_GAME_TYPE;
+					peer->Send((const char*)&host, sizeof(host), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				
+				host.typeId = ID_RECIEVE_MESSAGE;
 				//std::cout << "packet address" << packet->systemAddress.ToString() << std::endl;
 				for (unsigned int i = 0; i < currentClients; i++)
 				{
@@ -616,6 +652,10 @@ int main(void)
 				{
 					host.messageText[i] = -52;
 				}
+
+				//if we are a client, we want to go to play 
+
+
 			}
 			break;
 			case ID_RECEIVE_BATTLESHIP:
@@ -632,6 +672,22 @@ int main(void)
 			}
 			case ID_RECEIVE_TICTACTOE_FULL:
 			{
+				break;
+			}
+			case ID_SET_GAME_TYPE:
+			{
+				std::printf("Please enter what game you would like to play: \"t\" for TicTacToe, \"b\" for BattleShip \n");
+				fgets(str, 512, stdin);
+				if ((str[0] == 't') || (str[0] == 'T'))
+				{
+					playTicTacToe = true;
+					playBattleship = false;
+				}
+				else if ((str[0] == 'b') || (str[0] == 'B'))
+				{
+					playTicTacToe = false;
+					playBattleship = true;
+				}
 				break;
 			}
 			default:
@@ -820,6 +876,25 @@ int main(void)
 				participant.message[i] = -52;
 			}
 		}
+
+		if (playTicTacToe)
+		{
+			//do tictactoe
+			if (!turnDone)
+			{
+				ticTacToeManager.PrintBoard();
+				turnDone = true;
+			}
+
+
+		}
+		else //battleship
+		{
+			//do battleship
+
+
+		}
+
 
 		myInput.setIsServer(isServer);
 		myInput.setMaxCharInMessage(maxCharInMessage);

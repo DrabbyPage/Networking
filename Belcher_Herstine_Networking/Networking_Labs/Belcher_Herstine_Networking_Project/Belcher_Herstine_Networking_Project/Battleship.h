@@ -1,4 +1,5 @@
-
+#include <vector>
+#include <iostream>
 
 #ifndef BATTLESHIP
 #define BATTLESHIP
@@ -24,12 +25,18 @@ struct BattleshipData
 #pragma pack(pop)
 
 
+struct BattleshipPos
+{
+	char posX;
+	char posY;
+	bool isHit;
+};
+
+
 struct ShipData
 {
 	bool isSunk;
-	char posX; // should be a number (Start of the ship)
-	char posY; // should be a letter (start of teh ship)
-	bool isHorizontal; // true = horizonal, false = vertical
+	std::vector<BattleshipPos>tilePos;
 	int sizeOfShip; // value between 3-5
 };
 
@@ -40,13 +47,16 @@ public:
 	BattleshipManager();
 	~BattleshipManager();
 
-	void AddShip(ShipData newShip);
+	void AddShip(char xPos, char yPos, bool isHorizontal, int newSizeOfShip);
 	bool CheckLossOfPlayer();
-	void CheckHitOfShip(char shotPosX, char shotPosY);
+	bool CheckHitOfShip(char shotPosX, char shotPosY);
+	void FillBSFullGameData();
 
 private:
 	static const int amountOfShips = 4;
+	int currentAmountOfShips = 0;
 	ShipData listOfShips[amountOfShips];
+	BattleShipFullGameData fullGame;
 };
 
 
