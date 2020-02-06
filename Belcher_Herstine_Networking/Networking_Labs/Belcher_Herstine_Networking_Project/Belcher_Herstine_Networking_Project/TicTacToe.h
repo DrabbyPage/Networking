@@ -27,10 +27,17 @@ struct TicTacToeData
 	char ticTacToePos; // would be a... number?
 };
 
+// takes in the full game data from tictac toe and prints it to screen
+// it shows 1,2,3,etc for open places and X and O for player placements
 void PrintTicTacToeGameData(TicTacToeFullGameData tttData);
-// will return X, O or... i think -52 when using this X is for p1 O for p2 -52 for no input
+
+
+// will return X, O or... -52 when using this X is for p1 O for p2 -52 for no input
 char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData);
 
-//void FillTicTacToe(TicTacToeFullGameData tttData);
+
+// takes in the pos and checks to see if the pos is open for input
+// will return false if the move is not able to be made or if the input was not 1-9
+bool AddInputToTicTacToeGame(char newPos, char player, TicTacToeFullGameData tttData);
 
 #endif

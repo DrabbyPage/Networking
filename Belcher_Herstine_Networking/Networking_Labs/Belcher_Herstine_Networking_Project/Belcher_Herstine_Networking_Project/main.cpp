@@ -24,6 +24,7 @@ unsigned short serverPort = 6000;
 bool playBattleship = false;
 bool playTicTacToe = true;
 
+bool isServer;
 bool isSpectator;
 bool isClient;
 
@@ -38,7 +39,6 @@ unsigned int currentClients = 0;
 bool continueLoop = true;
 
 //bool printClientsNames = false;
-bool isServer;
 //bool privateMessage = false;
 
 #pragma pack(push, 1)
@@ -241,9 +241,6 @@ int main(void)
 	//BattleshipManager battleshipManager;
 	TicTacToeFullGameData ticTacToeManager = TicTacToeFullGameData();
 	ticTacToeManager.FillTicTacToe();
-	
-
-	//TicTacToe ticTacToeManager;
 
 	char tempName[maxCharInName];
 	string checking;
@@ -605,9 +602,6 @@ int main(void)
 
 				RecieveClientInfo(packet, host);
 
-				
-
-
 				// this is message to say that the user has entered the room
 				{
 					for (int i = 0; i < maxCharInName; i++)
@@ -675,6 +669,8 @@ int main(void)
 			}
 			case ID_RECEIVE_TICTACTOE_FULL:
 			{
+				TicTacToeFullGameData* temp = (TicTacToeFullGameData*)packet->data;
+				PrintTicTacToeGameData(*temp);
 				break;
 			}
 			case ID_SET_GAME_TYPE:
@@ -693,6 +689,18 @@ int main(void)
 				}
 				break;
 			}
+			case ID_SPECTATOR_REQUEST_DATA:
+				if (playBattleship)
+				{
+					// send the battleship data
+				}
+				else
+				{
+					//send the tic tac to data 
+					ticTacToeManager.typeId = ID_RECEIVE_TICTACTOE_FULL;
+					peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				}
+				break;
 			default:
 			{
 				std::printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -706,6 +714,15 @@ int main(void)
 		{
 			PrintClientNames(host, listOfParticipantAddress);
 			myInput.setPrintClientsNames(false);
+		}
+
+		if (isSpectator)
+		{
+			// the spectator is just going to constantly request the game data
+
+				//  have the host choose the game type
+			participant.typeId = ID_SPECTATOR_REQUEST_DATA;
+			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 		}
 
 		// sending the msg
@@ -886,10 +903,41 @@ int main(void)
 			if (!turnDone)
 			{
 				PrintTicTacToeGameData(ticTacToeManager);
-				turnDone = true;
-			}
+				// get the input of the player for their wanted spot
 
-			
+				// put the input into game
+				if (isServer)
+				{
+					if (AddInputToTicTacToeGame(/* place input here*/'1', 'O', ticTacToeManager))
+					{
+						// print the move made;
+						PrintTicTacToeGameData(ticTacToeManager);
+
+						// send it over to the other person
+						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+
+						// end the turn
+						turnDone = true;
+					}
+				}
+				else if (isClient)
+				{
+					if (AddInputToTicTacToeGame(/* place input here*/'1', 'X', ticTacToeManager))
+					{
+						// print the move made;
+						PrintTicTacToeGameData(ticTacToeManager);
+
+						// send it over to the other person
+						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+
+						// end the turn
+						turnDone = true;
+					}
+				}
+
+			}
 
 		}
 		else //battleship

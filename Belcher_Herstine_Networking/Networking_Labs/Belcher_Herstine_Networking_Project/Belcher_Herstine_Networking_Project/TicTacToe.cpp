@@ -2,7 +2,7 @@
 
 void PrintTicTacToeGameData(TicTacToeFullGameData tttData)
 {
-	int num = 0;
+	int num = 1;
 	std::cout << std::endl;
 	for (int i = 0; i < 3; i++)
 	{
@@ -82,4 +82,115 @@ char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 }
 
 
-
+// takes in the pos and checks to see if the pos is open for input
+// will return false if the move is not able to be made or if the input was not 1-9
+bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttData)
+{
+	switch (newPos)
+	{
+	case '1':
+		if (tttData.gameData[0][0] == -52)
+		{
+			tttData.gameData[0][0] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '2':
+		if (tttData.gameData[0][1] == -52)
+		{
+			tttData.gameData[0][1] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '3':
+		if (tttData.gameData[0][2] == -52)
+		{
+			tttData.gameData[0][2] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '4':
+		if (tttData.gameData[1][0] == -52)
+		{
+			tttData.gameData[1][0] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '5':
+		if (tttData.gameData[1][1] == -52)
+		{
+			tttData.gameData[1][1] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '6':
+		if (tttData.gameData[1][2] == -52)
+		{
+			tttData.gameData[1][2] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '7':
+		if (tttData.gameData[2][0] == -52)
+		{
+			tttData.gameData[2][0] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '8':
+		if (tttData.gameData[2][1] == -52)
+		{
+			tttData.gameData[2][1] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	case '9':
+		if (tttData.gameData[2][2] == -52)
+		{
+			tttData.gameData[2][2] = player;
+		}
+		else
+		{
+			// they cant make that move
+			return false;
+		}
+		break;
+	default:
+		//they entered something wrong
+		return false;
+		break;
+	}
+	return true;
+}
