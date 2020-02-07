@@ -22,7 +22,7 @@ unsigned short serverPort = 6000;
 //bool sendUserMessage = false;
 
 bool playBattleship = false;
-bool playTicTacToe = true;
+bool playTicTacToe = false;
 
 bool isServer;
 bool isSpectator;
@@ -698,6 +698,11 @@ int main(void)
 					playTicTacToe = false;
 					playBattleship = true;
 				}
+				GameType temp;
+				temp.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
+				temp.isBS = playBattleship;
+				temp.isTTT = playTicTacToe;
+				peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			}
 			case ID_SPECTATOR_REQUEST_DATA:
@@ -710,7 +715,7 @@ int main(void)
 				{
 					//send the tic tac to data 
 					ticTacToeManager.typeId = ID_RECEIVE_TICTACTOE_FULL;
-					peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+					peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
 				break;
 			}
@@ -721,7 +726,7 @@ int main(void)
 				playTicTacToe = temp->isTTT;
 				PrintTicTacToeGameData(ticTacToeManager);
 				turnDone = true;
-				
+
 				break;
 			}
 			default:
@@ -797,7 +802,7 @@ int main(void)
 				bool msgToHost = false;
 
 
-				// ge the message and get the name from the message... 
+				// ge the message and get the name from the message...
 
 				// transfer the name of participant to the host
 				for (int i = 0; i < maxCharInName; i++)
@@ -830,7 +835,7 @@ int main(void)
 				}
 				else
 				{
-					// check for the recipient address 
+					// check for the recipient address
 					for (unsigned int i = 0; i < currentClients; i++)
 					{
 						for (int j = 0; j < recipientName.size(); j++)
@@ -895,7 +900,7 @@ int main(void)
 					}
 					else
 					{
-						// make the message say that the person does not exist 
+						// make the message say that the person does not exist
 						//resets teh host msg
 						std::cout << "The User Does Not Exist" << std::endl;
 						for (int i = 0; i < maxCharInMessage; i++)
@@ -934,7 +939,7 @@ int main(void)
 				if (isServer)
 				{
 					char num[1];
-					std::printf("Please enter the number you would like to place your piece at: ");
+					std::printf("Please enter the number you would like to place your piece at: \n");
 					fgets(num, 512, stdin);
 
 					if (AddInputToTicTacToeGame(num[0], 'O', ticTacToeManager))
@@ -942,8 +947,27 @@ int main(void)
 						// print the move made;
 						PrintTicTacToeGameData(ticTacToeManager);
 
-						// send it over to the other person
-						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+						// if no one has won
+						if (CheckTicTacToeWinCondition(ticTacToeManager) == -52)
+						{
+							// send it over to the other person
+							peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+						}
+						else
+						{
+							if (CheckTicTacToeWinCondition(ticTacToeManager) == 'O')
+							{
+								// send message that someone the player has won
+								printf("You Won!");
+								// send the gametype as false for both
+								GameType temp;
+								temp.isBS = false;
+								temp.isTTT = false;
+								peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+							}
+							playTicTacToe = false;
+						}
+
 
 						// end the turn
 						turnDone = true;
@@ -952,15 +976,34 @@ int main(void)
 				else if (isClient)
 				{
 					char num[1];
-					std::printf("Please enter the number you would like to place your piece at: ");
+					std::printf("Please enter the number you would like to place your piece at: \n");
 					fgets(num, 512, stdin);
 					if (AddInputToTicTacToeGame(num[0], 'X', ticTacToeManager))
 					{
 						// print the move made;
 						PrintTicTacToeGameData(ticTacToeManager);
 
-						// send it over to the other person
-						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+						// if no one has won
+						if (CheckTicTacToeWinCondition(ticTacToeManager) == -52)
+						{
+							// send it over to the other person
+							peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+						}
+						else
+						{
+							if (CheckTicTacToeWinCondition(ticTacToeManager) == 'X')
+							{
+								// send message that someone the player has won
+								std::printf("You Won!");
+								// send the game type as false for both
+								GameType temp;
+								temp.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
+								temp.isBS = false;
+								temp.isTTT = false;
+								peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+							}
+							playTicTacToe = false;
+						}
 
 						// end the turn
 						turnDone = true;
