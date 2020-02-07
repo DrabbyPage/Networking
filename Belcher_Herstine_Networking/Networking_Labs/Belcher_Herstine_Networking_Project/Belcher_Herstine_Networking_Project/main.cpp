@@ -123,6 +123,15 @@ struct Host
 };
 #pragma pack(pop)
 
+#pragma pack(push,1)
+struct GameType
+{
+	char typeId;
+	bool isTTT;
+	bool isBS;
+};
+#pragma pack(pop)
+
 
 // participant sends a msg
 // host gets it...
@@ -637,7 +646,7 @@ int main(void)
 					host.participantsName[3] = 'i';
 					host.participantsName[4] = 'n';
 				}
-				
+
 				host.typeId = ID_RECIEVE_MESSAGE;
 				//std::cout << "packet address" << packet->systemAddress.ToString() << std::endl;
 				for (unsigned int i = 0; i < currentClients; i++)
@@ -671,6 +680,8 @@ int main(void)
 			{
 				TicTacToeFullGameData* temp = (TicTacToeFullGameData*)packet->data;
 				PrintTicTacToeGameData(*temp);
+				ticTacToeManager = *temp;
+				turnDone = false;
 				break;
 			}
 			case ID_SET_GAME_TYPE:
@@ -690,6 +701,7 @@ int main(void)
 				break;
 			}
 			case ID_SPECTATOR_REQUEST_DATA:
+			{
 				if (playBattleship)
 				{
 					// send the battleship data
@@ -701,6 +713,17 @@ int main(void)
 					peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				}
 				break;
+			}
+			case ID_RECEIVE_GAME_TYPE_FROM_HOST:
+			{
+				GameType* temp = (GameType*)packet->data;
+				playBattleship = temp->isBS;
+				playTicTacToe = temp->isTTT;
+				PrintTicTacToeGameData(ticTacToeManager);
+				turnDone = true;
+				
+				break;
+			}
 			default:
 			{
 				std::printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -726,6 +749,7 @@ int main(void)
 		}
 
 		// sending the msg
+		/*
 		if (myInput.getSendUserMessage())
 		{
 			if (!isServer)
@@ -896,6 +920,7 @@ int main(void)
 				participant.message[i] = -52;
 			}
 		}
+		*/
 
 		if (playTicTacToe)
 		{
@@ -908,14 +933,17 @@ int main(void)
 				// put the input into game
 				if (isServer)
 				{
-					if (AddInputToTicTacToeGame(/* place input here*/'1', 'O', ticTacToeManager))
+					char num[1];
+					std::printf("Please enter the number you would like to place your piece at: ");
+					fgets(num, 512, stdin);
+
+					if (AddInputToTicTacToeGame(num[0], 'O', ticTacToeManager))
 					{
 						// print the move made;
 						PrintTicTacToeGameData(ticTacToeManager);
 
 						// send it over to the other person
-						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-
+						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
 
 						// end the turn
 						turnDone = true;
@@ -923,14 +951,16 @@ int main(void)
 				}
 				else if (isClient)
 				{
-					if (AddInputToTicTacToeGame(/* place input here*/'1', 'X', ticTacToeManager))
+					char num[1];
+					std::printf("Please enter the number you would like to place your piece at: ");
+					fgets(num, 512, stdin);
+					if (AddInputToTicTacToeGame(num[0], 'X', ticTacToeManager))
 					{
 						// print the move made;
 						PrintTicTacToeGameData(ticTacToeManager);
 
 						// send it over to the other person
 						peer->Send((const char*)&ticTacToeManager, sizeof(ticTacToeManager), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-
 
 						// end the turn
 						turnDone = true;
@@ -951,7 +981,7 @@ int main(void)
 		myInput.setIsServer(isServer);
 		myInput.setMaxCharInMessage(maxCharInMessage);
 		continueLoop = myInput.getContinueLoop();
-		myInput.GetInput(participant.message);
+		//myInput.GetInput(participant.message);
 		//GetInput(participant.message);
 
 	}
@@ -979,7 +1009,5 @@ void DoMyPacketHandlerHost(Host* hostPack)
 			std::cout << hostPack->messageText[i];
 		}
 	}
-
-
 	// Perform the functionality for this type of packet, with your struct,  MyStruct *s
 }

@@ -84,7 +84,7 @@ char CheckTicTacToeWinCondition(TicTacToeFullGameData tttData)
 
 // takes in the pos and checks to see if the pos is open for input
 // will return false if the move is not able to be made or if the input was not 1-9
-bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttData)
+bool AddInputToTicTacToeGame(char newPos, char player, TicTacToeFullGameData &tttData)
 {
 	switch (newPos)
 	{
@@ -96,6 +96,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -107,6 +108,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -118,6 +120,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -129,6 +132,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -140,6 +144,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -151,6 +156,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -162,6 +168,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -173,6 +180,7 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
@@ -184,11 +192,13 @@ bool AddInputToTicTacToeGame(char newPos, char player,TicTacToeFullGameData tttD
 		else
 		{
 			// they cant make that move
+			std::cout << "\nYou cant make that move there because there is already someone on that position.\n";
 			return false;
 		}
 		break;
 	default:
 		//they entered something wrong
+		std::cout << "\nYou have inputted an incorrect number/ input\n";
 		return false;
 		break;
 	}
