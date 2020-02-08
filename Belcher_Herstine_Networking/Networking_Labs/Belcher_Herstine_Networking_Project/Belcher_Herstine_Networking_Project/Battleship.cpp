@@ -23,21 +23,46 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 	newPos.posX = xPos;
 	newPos.posY = yPos;
 
+	int xPosInt = GivePositionXFromChar(xPos);
+	int yPosInt = GivePositionXFromChar(yPos);
+
 	ShipData newShip;
 	newShip.sizeOfShip = newSizeOfShip;
 	newShip.isSunk = false;
+
+	int inFrontOfShipVal = 1;
 
 	for (int i = 0; i < newSizeOfShip; i++)
 	{
 		if (isHorizontal)
 		{
-			newPos.posX += i;
-			newShip.tilePos.push_back(newPos);
+			// if the next pos is out of bounds
+			if (xPosInt + i >= 10)
+			{
+				//put the position in front of the place location
+				newPos.posX -= inFrontOfShipVal;
+				inFrontOfShipVal--;
+			}
+			else
+			{
+				newPos.posX += i;
+				newShip.tilePos.push_back(newPos);
+			}
+			newPos.posY = yPos;
 		}
 		else
 		{
-			newPos.posY += i;
-			newShip.tilePos.push_back(newPos);
+			if (yPosInt + i >= 10)
+			{
+				newPos.posY -= inFrontOfShipVal;
+				inFrontOfShipVal--;
+			}
+			else
+			{
+				newPos.posY += i;
+				newShip.tilePos.push_back(newPos);
+			}
+			newPos.posX = xPos;
 		}
 	}
 

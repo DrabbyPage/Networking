@@ -16,7 +16,7 @@ struct BattleShipFullGameData
 
 //should always be type id ID_RECEIVE_BATTLESHIP !!!
 #pragma pack(push, 1)
-struct BattleshipData
+struct BattleshipShotData
 {
 	unsigned char typeId;
 	char yPos; // has to be a letter
