@@ -249,7 +249,7 @@ int main(void)
 	Host host;
 	Participant participant;
 
-	//BattleshipManager battleshipManager;
+	BattleshipManager battleshipManager;
 	TicTacToeFullGameData ticTacToeManager = TicTacToeFullGameData();
 	ticTacToeManager.FillTicTacToe();
 
@@ -369,6 +369,7 @@ int main(void)
 			{
 				if (isSpectator)
 				{
+
 					// the spectator is just going to constantly request the game data
 					std::printf("Our connection request has been accepted for spectator.\n");
 					participant.typeId = ID_BROADCAST_USER;
@@ -1049,7 +1050,34 @@ int main(void)
 		else //battleship
 		{
 			//do battleship
+						//do battleship
+			if (!battleshipManager.GetDoneWithPlacement())
+			{
+				// ask for placement X
 
+				// ask for placement y
+
+				// ask vertical or horizontal
+
+				// ask for size
+
+				// actually place
+
+				// show game data
+
+			}
+			else
+			{
+				// if you turn
+				if (!turnDone)
+				{
+					// make a shot move
+
+					// turn is done
+
+				}
+
+			}
 
 		}
 
