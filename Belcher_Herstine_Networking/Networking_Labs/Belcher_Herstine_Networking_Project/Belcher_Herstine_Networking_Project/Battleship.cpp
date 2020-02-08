@@ -134,6 +134,19 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 	}
 
 	listOfShips[currentAmountOfShips] = newShip;
+
+	int posXOfShip;
+	int posYOfShip;
+	// go through each list of ship point... fill the pos of ships
+	for (int i = 0; i < newShip.sizeOfShip; i++)
+	{
+		posXOfShip = GivePositionXFromChar(newShip.tilePos.at(i).posX);
+
+		posYOfShip = GivePositionYFromChar(newShip.tilePos.at(i).posY);
+
+		fullGame.gameData[posYOfShip][posXOfShip] = '#';
+	}
+
 	currentAmountOfShips++;
 
 	if (currentAmountOfShips == 4)
@@ -224,30 +237,12 @@ bool BattleshipManager::CheckHitOfShip(char shotPosX, char shotPosY)
 // are the ships positions
 void BattleshipManager::FillBSFullGameData()
 {
-	int posXOfShip;
-	int posYOfShip;
-	// go through each list of ship point... fill the pos of ships
-	for (int i = 0; i < amountOfShips; i++)
-	{
-		for (int j = 0; j < listOfShips[i].tilePos.size(); j++)
-		{
-			posXOfShip = GivePositionXFromChar(listOfShips[i].tilePos.at(j).posX);
-
-			posYOfShip = GivePositionYFromChar(listOfShips[i].tilePos.at(j).posY);
-
-			fullGame.gameData[posYOfShip][posXOfShip] = '#';
-		}
-	}
-
 	// fill the rest of the list with water!!!
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 10; j++)
 		{
-			if (fullGame.gameData[i][j] != '#' )
-			{
-				fullGame.gameData[i][j] = '~';
-			}
+			fullGame.gameData[i][j] = '~';
 		}
 	}
 }

@@ -250,6 +250,7 @@ int main(void)
 	Participant participant;
 
 	BattleshipManager battleshipManager;
+	battleshipManager.FillBSFullGameData();
 	TicTacToeFullGameData ticTacToeManager = TicTacToeFullGameData();
 	ticTacToeManager.FillTicTacToe();
 
@@ -1075,7 +1076,7 @@ int main(void)
 			}
 
 		}
-		else //battleship
+		else if(playBattleship)//battleship
 		{
 			//do battleship
 			if (!battleshipManager.GetDoneWithPlacement())
