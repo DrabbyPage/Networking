@@ -297,8 +297,8 @@ int main(void)
 	{
 		//spectator stuff
 		isSpectator = true;
-		SocketDescriptor sd(serverPort, 0);
-		peer->Startup(maxClients, &sd, 1);
+		SocketDescriptor sd;
+		peer->Startup(1, &sd, 1);
 		isServer = false;
 		myInput.setIsServer(isServer);
 		for (int i = 0; i < maxCharInName; i++)
@@ -318,24 +318,16 @@ int main(void)
 
 		peer->SetMaximumIncomingConnections(maxClients);
 	}
-	else if (isClient)
+	else if (isClient || isSpectator)
 	{
-		std::printf("You are a player!\n");
-		std::printf("Enter server IP or hit enter for 127.0.0.1\n");
-		fgets(str, 512, stdin);
-		if (str[0] == 10) {
-			strcpy(str, "127.0.0.1");
+		if (isClient)
+		{
+			std::printf("You are a player!\n");
 		}
-		std::printf("Connecting to the chat room for ");
-		std::printf(&participant.name[0]);
-		//myInput.setIsServer(isServer);
-		myInput.DisplayConsoleWindow();
-
-		peer->Connect(str, serverPort, 0, 0);
-	}
-	else
-	{
-		std::printf("You are a spectator!\n");
+		else
+		{
+			std::printf("You are a spectator!\n");
+		}
 		std::printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
 		if (str[0] == 10) {
@@ -375,16 +367,27 @@ int main(void)
 			}
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
-				// broadcast that the user has joined 
-				std::printf("Our connection request has been accepted.\n");
-				participant.typeId = ID_BROADCAST_USER;
-				serverAddress = packet->systemAddress;
-				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				if (isSpectator)
+				{
+					// the spectator is just going to constantly request the game data
+					std::printf("Our connection request has been accepted for spectator.\n");
+					participant.typeId = ID_BROADCAST_USER;
+					serverAddress = packet->systemAddress;
+					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+				else
+				{
+					// broadcast that the user has joined 
+					std::printf("Our connection request has been accepted.\n");
+					participant.typeId = ID_BROADCAST_USER;
+					serverAddress = packet->systemAddress;
+					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
-				//  have the host choose the game type
-				participant.typeId = ID_SET_GAME_TYPE;
-				peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
+					//  have the host choose the game type
+					participant.typeId = ID_SET_GAME_TYPE;
+					peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					
+				}
 				break;
 			}
 			case ID_NEW_INCOMING_CONNECTION:
@@ -768,15 +771,15 @@ int main(void)
 			PrintClientNames(host, listOfParticipantAddress);
 			myInput.setPrintClientsNames(false);
 		}
-
 		if (isSpectator)
 		{
-			// the spectator is just going to constantly request the game data
+			// the spectator is just going to constantly request the game data=
 
-				//  have the host choose the game type
+			//  have the host choose the game type
 			participant.typeId = ID_SPECTATOR_REQUEST_DATA;
 			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 		}
+		
 
 		// sending the msg
 		/*
