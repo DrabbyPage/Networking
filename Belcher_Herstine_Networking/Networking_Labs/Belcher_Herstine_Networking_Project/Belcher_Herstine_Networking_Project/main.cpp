@@ -21,7 +21,7 @@ unsigned short serverPort = 6000;
 //bool canTypeMessage = true;
 //bool sendUserMessage = false;
 
-bool playBattleship = true;
+bool playBattleship = false;
 bool playTicTacToe = false;
 
 bool isServer;
@@ -1114,8 +1114,13 @@ int main(void)
 					// actually place
 					battleshipManager.AddShip(newXPos[0],newYPos[0],isHor,shipSizeInt);
 
+
+					PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
 					//turn done
 					turnDone = true;
+
+					//need to send message to the other player for them to make another placement then they
+					//will send back a message for our turn
 				}
 
 
