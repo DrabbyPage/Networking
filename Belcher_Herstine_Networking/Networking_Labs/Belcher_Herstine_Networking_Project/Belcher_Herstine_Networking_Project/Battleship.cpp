@@ -345,7 +345,7 @@ int GivePositionYFromChar(char yChar)
 void PrintBattleshipGameData(BattleShipFullGameData bsData)
 {
 	// 1 2 3 4 5 6 7 8 (the top of the battle ship game
-	std::cout << " ";
+	std::cout << "  ";
 	for (unsigned int i = 0; i < 9; i++)
 	{
 		std::cout << i << " ";
