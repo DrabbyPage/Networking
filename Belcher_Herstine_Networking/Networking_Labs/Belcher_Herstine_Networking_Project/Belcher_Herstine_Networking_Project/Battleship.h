@@ -52,11 +52,15 @@ public:
 	bool CheckHitOfShip(char shotPosX, char shotPosY);
 	void FillBSFullGameData();
 
+	bool GetDoneWithPlacement() { return doneWithPlacement; }
+
 private:
+	bool doneWithPlacement = false;
 	static const int amountOfShips = 4;
 	int currentAmountOfShips = 0;
 	ShipData listOfShips[amountOfShips];
 	BattleShipFullGameData fullGame;
+
 	// notice this isnt the other persons data its only the data you know
 	// AKA when you get hits and misses
 	BattleShipFullGameData otherPlayerData;

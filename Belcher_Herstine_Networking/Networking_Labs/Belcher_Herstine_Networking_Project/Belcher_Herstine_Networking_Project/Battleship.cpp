@@ -15,14 +15,29 @@ BattleshipManager::~BattleshipManager()
 
 }
 
-// adds a new ship to the list
+// adds a new ship to the list given the xpos ypos and whether it is horizontal or vertical
+// it adds based on the size and if the user tries to place the ship out of bounds then the 
+//chips tiles will be placed ahead of the starting tile pos
 void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int newSizeOfShip)
 {
+	for (int i = 0; i < currentAmountOfShips; i++)
+	{
+		// make sure the ship size is valid and not a duplicate
+		if (listOfShips[i].sizeOfShip == newSizeOfShip &&
+			newSizeOfShip < 6 && newSizeOfShip > 1)
+		{
+			// the is an incorrect placement
+			std::cout << "\nThat is an incorrect size\n";
+			return;
+		}
+	}
+
 	BattleshipPos newPos;
 	newPos.isHit = false;
 	newPos.posX = xPos;
 	newPos.posY = yPos;
 
+	// get the x and y int values for easy checking
 	int xPosInt = GivePositionXFromChar(xPos);
 	int yPosInt = GivePositionXFromChar(yPos);
 
@@ -40,7 +55,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 			if (xPosInt + i >= 10)
 			{
 				//put the position in front of the place location
-				newPos.posX -= inFrontOfShipVal;
+				newPos.posX = xPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
 			}
 			else
@@ -54,7 +69,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 		{
 			if (yPosInt + i >= 10)
 			{
-				newPos.posY -= inFrontOfShipVal;
+				newPos.posY = yPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
 			}
 			else
@@ -67,6 +82,12 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 	}
 
 	listOfShips[currentAmountOfShips] = newShip;
+	currentAmountOfShips++;
+
+	if (currentAmountOfShips == 4)
+	{
+		doneWithPlacement = true;
+	}
 }
 
 // checks to see if all ships have sunken
