@@ -129,6 +129,8 @@ struct GameType
 	char typeId;
 	bool isTTT;
 	bool isBS;
+	bool hostWon = false;
+	bool playerWon = false;
 };
 #pragma pack(pop)
 
@@ -727,6 +729,29 @@ int main(void)
 				PrintTicTacToeGameData(ticTacToeManager);
 				turnDone = true;
 
+				if (isServer)
+				{
+					if (temp->playerWon)
+					{
+						std::printf("You Lost!");
+					}
+					else if (temp->hostWon)
+					{
+						std::printf("You Won!");
+					}
+				}
+				else if (isClient)
+				{
+					if (temp->playerWon)
+					{
+						std::printf("You Won!");
+					}
+					else if (temp->hostWon)
+					{
+						std::printf("You Lost!");
+					}
+				}
+
 				break;
 			}
 			default:
@@ -961,6 +986,9 @@ int main(void)
 								printf("You Won!");
 								// send the gametype as false for both
 								GameType temp;
+								temp.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
+								temp.hostWon = true;
+								temp.playerWon = false;
 								temp.isBS = false;
 								temp.isTTT = false;
 								peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
@@ -998,6 +1026,8 @@ int main(void)
 								// send the game type as false for both
 								GameType temp;
 								temp.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
+								temp.hostWon = false;
+								temp.playerWon = true;
 								temp.isBS = false;
 								temp.isTTT = false;
 								peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
