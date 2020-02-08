@@ -57,11 +57,37 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				//put the position in front of the place location
 				newPos.posX = xPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
+
+				// check to see that placement is not on another ship
+				for (int k = 0; k < currentAmountOfShips; k++)
+				{
+					for (int j = 0; j < listOfShips[k].tilePos.size(); j++)
+					{
+						if (newPos.posX == listOfShips[k].tilePos.at(j).posX && yPos == listOfShips[k].tilePos.at(j).posY)
+						{
+							std::cout << "\nThat placement is already taken by another ship. Try Again.\n";
+							return;
+						}
+					}
+				}
 			}
 			else
 			{
 				newPos.posX += i;
 				newShip.tilePos.push_back(newPos);
+
+				// check to see that placement is not on another ship
+				for (int k = 0; k < currentAmountOfShips; k++)
+				{
+					for (int j = 0; j < listOfShips[k].tilePos.size(); j++)
+					{
+						if (newPos.posX == listOfShips[k].tilePos.at(j).posX && yPos == listOfShips[k].tilePos.at(j).posY)
+						{
+							std::cout << "\nThat placement is already taken by another ship. Try Again.\n";
+							return;
+						}
+					}
+				}
 			}
 			newPos.posY = yPos;
 		}
@@ -71,11 +97,37 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 			{
 				newPos.posY = yPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
+
+				// check to see that placement is not on another ship
+				for (int k = 0; k < currentAmountOfShips; k++)
+				{
+					for (int j = 0; j < listOfShips[k].tilePos.size(); j++)
+					{
+						if (xPos == listOfShips[k].tilePos.at(j).posX && newPos.posY == listOfShips[k].tilePos.at(j).posY)
+						{
+							std::cout << "\nThat placement is already taken by another ship. Try Again.\n";
+							return;
+						}
+					}
+				}
 			}
 			else
 			{
 				newPos.posY += i;
 				newShip.tilePos.push_back(newPos);
+
+				// check to see that placement is not on another ship
+				for (int k = 0; k < currentAmountOfShips; k++)
+				{
+					for (int j = 0; j < listOfShips[k].tilePos.size(); j++)
+					{
+						if (xPos == listOfShips[k].tilePos.at(j).posX && newPos.posY == listOfShips[k].tilePos.at(j).posY)
+						{
+							std::cout << "\nThat placement is already taken by another ship. Try Again.\n";
+							return;
+						}
+					}
+				}
 			}
 			newPos.posX = xPos;
 		}
@@ -116,19 +168,19 @@ bool BattleshipManager::CheckHitOfShip(char shotPosX, char shotPosY)
 	for (int i = 0; i < amountOfShips; i++)
 	{
 		// make sure that the ship is not already sunk
-		if (!listOfShips->isSunk)
+		if (!listOfShips[i].isSunk)
 		{
 			// loop through tiles to see if the pos is a hit
-			for (int j = 0; j < listOfShips->tilePos.size(); j++)
+			for (int j = 0; j < listOfShips[i].tilePos.size(); j++)
 			{
 				// check if the pos is the same as the tile's x val
-				if (listOfShips->tilePos[j].posX == shotPosX)
+				if (listOfShips[i].tilePos[j].posX == shotPosX)
 				{
 					// check if the pos is the same as the tiles y val
-					if (listOfShips->tilePos[j].posY == shotPosY)
+					if (listOfShips[i].tilePos[j].posY == shotPosY)
 					{
 						// make the tile officially hit
-						listOfShips->tilePos[j].isHit = true;
+						listOfShips[i].tilePos[j].isHit = true;
 
 						// get the 2d array coordinates for feedback
 						int hitPosX = GivePositionXFromChar(shotPosX);
@@ -136,6 +188,20 @@ bool BattleshipManager::CheckHitOfShip(char shotPosX, char shotPosY)
 
 						// show the player that was hit that they were hit (NOT THE SHOOTING PLAYER YET)
 						fullGame.gameData[hitPosY][hitPosX] = 'X';
+
+						// check to see if the ship was sunk
+						for (int k = 0; k < listOfShips[i].tilePos.size(); k++)
+						{
+							if (listOfShips[i].tilePos.at(k).isHit)
+							{
+								listOfShips[i].isSunk = true;
+							}
+							else
+							{
+								listOfShips[i].isSunk = false;
+								break;
+							}
+						}
 
 						return true;
 					}
@@ -276,7 +342,11 @@ int GivePositionYFromChar(char yChar)
 	return posYOfShip;
 }
 
-
+// prints data of the game like:
+//  1 2 3 4
+// a 
+// b
+// c
 void PrintBattleshipGameData(BattleShipFullGameData bsData)
 {
 	// 1 2 3 4 5 6 7 8 (the top of the battle ship game
