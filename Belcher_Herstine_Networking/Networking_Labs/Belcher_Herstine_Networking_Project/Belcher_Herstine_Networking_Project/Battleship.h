@@ -25,6 +25,16 @@ struct BattleshipShotData
 #pragma pack(pop)
 
 
+//should always be type id ID_RECEIVE_BATTLESHIP !!!
+#pragma pack(push, 1)
+struct BattleshipHitOrMiss
+{
+	unsigned char typeId;
+	bool hit;
+};
+#pragma pack(pop)
+
+
 struct BattleshipPos
 {
 	char posX;
