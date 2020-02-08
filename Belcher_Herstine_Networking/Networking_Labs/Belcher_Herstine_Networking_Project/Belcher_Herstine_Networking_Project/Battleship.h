@@ -62,6 +62,9 @@ public:
 	bool CheckHitOfShip(char shotPosX, char shotPosY);
 	void FillBSFullGameData();
 
+	BattleShipFullGameData GetPlayerPlacementInfo() { return fullGame; }
+	BattleShipFullGameData GetPlayerShotInfo() { return playerShotData; }
+
 	bool GetDoneWithPlacement() { return doneWithPlacement; }
 
 private:
@@ -73,11 +76,16 @@ private:
 
 	// notice this isnt the other persons data its only the data you know
 	// AKA when you get hits and misses
-	BattleShipFullGameData otherPlayerData;
+	BattleShipFullGameData playerShotData;
 };
 
 
 void PrintBattleshipGameData(BattleShipFullGameData bsData);
 
+// letters a,b,c,etc are linked to 0,1,2,3,etc corrdinates
+int GivePositionYFromChar(char yChar);
+
+// letters 1,2,3,4,etc are linked to their integer variables
+int GivePositionXFromChar(char xChar);
 
 #endif

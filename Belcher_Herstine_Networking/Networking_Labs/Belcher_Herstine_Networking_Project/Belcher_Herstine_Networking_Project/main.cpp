@@ -21,7 +21,7 @@ unsigned short serverPort = 6000;
 //bool canTypeMessage = true;
 //bool sendUserMessage = false;
 
-bool playBattleship = false;
+bool playBattleship = true;
 bool playTicTacToe = false;
 
 bool isServer;
@@ -249,7 +249,7 @@ int main(void)
 	Host host;
 	Participant participant;
 
-	//BattleshipManager battleshipManager;
+	BattleshipManager battleshipManager;
 	TicTacToeFullGameData ticTacToeManager = TicTacToeFullGameData();
 	ticTacToeManager.FillTicTacToe();
 
@@ -669,16 +669,33 @@ int main(void)
 
 			}
 			break;
-			case ID_RECEIVE_BATTLESHIP:
+			case ID_RECEIVE_BATTLESHIP_SHOT:
 			{
+				BattleshipShotData* temp = (BattleshipShotData*)packet->data;
+
+				bool tempHit = battleshipManager.CheckHitOfShip(temp->xPos, temp->yPos);
+
+				BattleshipHitOrMiss hitOrMissTemp;
+				hitOrMissTemp.typeId = ID_RECEIVE_BATTLESHIP_HIT_OR_MISS;
+				hitOrMissTemp.hit = tempHit;
+
+				peer->Send((const char*)&hitOrMissTemp, sizeof(hitOrMissTemp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
 				break;
 			}
 			case ID_RECEIVE_BATTLESHIP_FULL:
 			{
 				break;
 			}
-			case ID_RECEIVE_TIC_TAC_TOE:
+			case ID_RECEIVE_BATTLESHIP_HIT_OR_MISS:
 			{
+				BattleshipHitOrMiss* temp = (BattleshipHitOrMiss*)packet->data;
+				
+				if (temp->hit)
+				{
+					std::cout << "\n You Hit A Ship!!!\n";
+				}
+
 				break;
 			}
 			case ID_RECEIVE_TICTACTOE_FULL:
@@ -714,7 +731,19 @@ int main(void)
 			{
 				if (playBattleship)
 				{
+					// send the shot data  so it appears on top
+					BattleShipFullGameData tempPlayerShotData = battleshipManager.GetPlayerShotInfo();
+					tempPlayerShotData.typeId = ID_RECEIVE_BATTLESHIP_FULL;
+
+					// send the info
+					peer->Send((const char*)&tempPlayerShotData, sizeof(tempPlayerShotData), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
 					// send the battleship data
+					BattleShipFullGameData tempPlayerPlacementData = battleshipManager.GetPlayerPlacementInfo();
+					tempPlayerPlacementData.typeId = ID_RECEIVE_BATTLESHIP_FULL;
+
+					// send the info
+					peer->Send((const char*)&tempPlayerPlacementData, sizeof(tempPlayerPlacementData), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
 				else
 				{
@@ -1049,7 +1078,67 @@ int main(void)
 		else //battleship
 		{
 			//do battleship
+			if (!battleshipManager.GetDoneWithPlacement())
+			{
+				if (!turnDone)
+				{
+					// show teh board
+					PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
+					char newXPos[1];
+					// ask for placement X
+					std::printf("\nPlease enter the X position: \n");
+					fgets(newXPos, 512, stdin);
 
+					char newYPos[1];
+					// ask for placement y
+					std::printf("\nPlease enter the Y position: \n");
+					fgets(newYPos, 512, stdin);
+					// ask vertical or horizontal
+					char horOrVert[1];
+					bool isHor = false;
+					// ask for placement X
+					std::printf("\nPlease enter the 'h' for horizontal, 'v' for verical: \n");
+					fgets(horOrVert, 512, stdin);
+					if ((horOrVert[0] == 'h') || (horOrVert[0] == 'H'))
+					{
+						isHor = true;
+					}
+
+					// ask for size
+					char size[1];
+					std::printf("\nPlease enter the size of the ship.\nOptions are 2, 3, 4, 5. \n");
+					fgets(size, 512, stdin);
+					int shipSizeInt = GivePositionXFromChar(size[0]);
+
+					// actually place
+					battleshipManager.AddShip(newXPos[0],newYPos[0],isHor,shipSizeInt);
+
+					//turn done
+					turnDone = true;
+				}
+
+
+			}
+			else
+			{
+				// if you turn
+				if(!turnDone)
+				{
+					// make a shot move
+					// ask for posx
+
+					// ask for posy 
+
+					// add data to the a container
+					BattleshipShotData newShot;
+					newShot.xPos = /*insert info*/ 0;
+					newShot.yPos = /*insert info*/ 0;
+					
+					//send the info
+
+				}
+				
+			}
 
 		}
 
