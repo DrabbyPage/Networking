@@ -796,7 +796,17 @@ int main(void)
 				GameType* temp = (GameType*)packet->data;
 				playBattleship = temp->isBS;
 				playTicTacToe = temp->isTTT;
-				PrintTicTacToeGameData(ticTacToeManager);
+
+
+				if (playTicTacToe)
+				{
+					PrintTicTacToeGameData(ticTacToeManager);
+				}
+
+				else if (playBattleship)
+				{
+					PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
+				}
 				turnDone = true;
 
 				if (isServer)
@@ -824,6 +834,11 @@ int main(void)
 
 				break;
 			}
+			case ID_RECEIVE_TURN_END:
+			{
+
+			}
+			break;
 			default:
 			{
 				std::printf("Message with identifier %i has arrived.\n", packet->data[0]);
