@@ -258,6 +258,7 @@ void BattleshipManager::FillBSFullGameData()
 		for (int j = 0; j < 10; j++)
 		{
 			fullGame.gameData[i][j] = '~';
+			playerShotData.gameData[i][j] = '~';
 		}
 	}
 }
