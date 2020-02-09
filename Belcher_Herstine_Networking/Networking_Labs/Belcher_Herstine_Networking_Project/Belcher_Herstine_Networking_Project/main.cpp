@@ -682,7 +682,33 @@ int main(void)
 
 				peer->Send((const char*)&hitOrMissTemp, sizeof(hitOrMissTemp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
-				turnDone = false;
+				if (battleshipManager.CheckLossOfPlayer())
+				{
+					GameType winCondition;
+					winCondition.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
+					
+					winCondition.hostWon = true;
+					winCondition.playerWon = true;
+
+					if (isServer)
+					{
+						winCondition.hostWon = false;
+					}
+					else if (isClient)
+					{
+						winCondition.playerWon = true;
+					}
+
+					winCondition.isBS = false;
+					winCondition.isTTT = false;
+
+					peer->Send((const char*)&winCondition, sizeof(winCondition), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+				}
+				else
+				{
+					turnDone = false;
+				}
 
 				break;
 			}
