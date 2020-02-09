@@ -676,6 +676,20 @@ int main(void)
 
 				bool tempHit = battleshipManager.CheckHitOfShip(temp->xPos, temp->yPos);
 
+				int xPosShotInt = GivePositionXFromChar(temp->xPos);
+				int yPosShotInt = GivePositionYFromChar(temp->yPos);
+
+				if (tempHit)
+				{
+					battleshipManager.GetPlayerPlacementInfo().gameData[yPosShotInt][xPosShotInt] = 'X';
+				}
+				else
+				{
+					battleshipManager.GetPlayerPlacementInfo().gameData[yPosShotInt][xPosShotInt] = 'O';
+				}
+
+				PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
+
 				BattleshipHitOrMiss hitOrMissTemp;
 				hitOrMissTemp.typeId = ID_RECEIVE_BATTLESHIP_HIT_OR_MISS;
 				hitOrMissTemp.hit = tempHit;
@@ -684,6 +698,7 @@ int main(void)
 
 				if (battleshipManager.CheckLossOfPlayer())
 				{
+					printf("\nYou Lose!\n");
 					GameType winCondition;
 					winCondition.typeId = ID_RECEIVE_GAME_TYPE_FROM_HOST;
 					
@@ -693,10 +708,11 @@ int main(void)
 					if (isServer)
 					{
 						winCondition.hostWon = false;
+
 					}
 					else if (isClient)
 					{
-						winCondition.playerWon = true;
+						winCondition.playerWon = false;
 					}
 
 					winCondition.isBS = false;
@@ -714,12 +730,15 @@ int main(void)
 			}
 			case ID_RECEIVE_BATTLESHIP_FULL:
 			{
+				BattleShipFullGameData* temp = (BattleShipFullGameData*)packet->data;
+
+				PrintBattleshipGameData(*temp);
+
 				break;
 			}
 			case ID_RECEIVE_BATTLESHIP_HIT_OR_MISS:
 			{
 				BattleshipHitOrMiss* temp = (BattleshipHitOrMiss*)packet->data;
-				
 				int shotXPos = GivePositionXFromChar(temp->xPos);
 				int shotYPos = GivePositionYFromChar(temp->yPos);
 
@@ -733,6 +752,7 @@ int main(void)
 					std::cout << "\nYou Missed\n";
 					battleshipManager.GetPlayerShotInfo().gameData[shotYPos][shotXPos] = 'O';
 				}
+				PrintBattleshipGameData(battleshipManager.GetPlayerShotInfo());
 
 				break;
 			}
@@ -836,9 +856,9 @@ int main(void)
 			}
 			case ID_RECEIVE_TURN_END:
 			{
-
+				turnDone = false;
+				break;
 			}
-			break;
 			default:
 			{
 				std::printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -848,19 +868,19 @@ int main(void)
 			}
 		}
 
+		if (GetAsyncKeyState(VK_CONTROL) && isSpectator)
+		{
+			//get information
+			participant.typeId = ID_SPECTATOR_REQUEST_DATA;
+			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+		}
+
 		if (myInput.getPrintClientsNames())
 		{
 			PrintClientNames(host, listOfParticipantAddress);
 			myInput.setPrintClientsNames(false);
 		}
-		if (isSpectator)
-		{
-			// the spectator is just going to constantly request the game data=
 
-			//  have the host choose the game type
-			participant.typeId = ID_SPECTATOR_REQUEST_DATA;
-			peer->Send((const char*)&participant, sizeof(participant), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-		}
 		
 
 		// sending the msg
@@ -1128,7 +1148,7 @@ int main(void)
 			}
 
 		}
-		else if(playBattleship)//battleship
+		else if (playBattleship)//battleship
 		{
 			//do battleship
 			if (!battleshipManager.GetDoneWithPlacement())
@@ -1164,23 +1184,38 @@ int main(void)
 					int shipSizeInt = GivePositionXFromChar(size[0]);
 
 					// actually place
-					battleshipManager.AddShip(newXPos[0],newYPos[0],isHor,shipSizeInt);
+					battleshipManager.AddShip(newXPos[0], newYPos[0], isHor, shipSizeInt);
 
 
-					PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
+					//PrintBattleshipGameData(battleshipManager.GetPlayerPlacementInfo());
 					//turn done
-					turnDone = true;
 
-					//need to send message to the other player for them to make another placement then they
-					//will send back a message for our turn
+					if (battleshipManager.GetDoneWithPlacement())
+					{
+						turnDone = true;
+						GameType temp;
+						temp.typeId = ID_RECEIVE_TURN_END;
+						//need to send message to the other player for them to make another placement then they
+						//will send back a message for our turn
+						if (isServer)
+						{
+							peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+						}
+						else if (isClient)
+						{
+							peer->Send((const char*)&temp, sizeof(temp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+						}
+
+					}
+
 				}
-
 
 			}
 			else
 			{
 				// if you turn
-				if(!turnDone)
+				if (!turnDone)
 				{
 					// make a shot move
 					// ask for posx
@@ -1192,7 +1227,7 @@ int main(void)
 					// ask for posy 
 					char newYPos[1];
 					// ask for placement X
-					std::printf("\nPlease enter your shot's X position: \n");
+					std::printf("\nPlease enter your shot's Y position: \n");
 					fgets(newYPos, 512, stdin);
 
 					// if invalid shot pos
@@ -1205,24 +1240,36 @@ int main(void)
 
 						newShot.typeId = ID_RECEIVE_BATTLESHIP_SHOT;
 
+						if (isServer)
+						{
+							peer->Send((const char*)&newShot, sizeof(newShot), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+
+						}
+						else if (isClient)
+						{
+							peer->Send((const char*)&newShot, sizeof(newShot), HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+						}
 						//send the info
-						peer->Send((const char*)&newShot, sizeof(newShot), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
 
 						turnDone = true;
 
 					}
 
 				}
-				
-			}
 
+			}
 		}
 
 
 		myInput.setIsServer(isServer);
 		myInput.setMaxCharInMessage(maxCharInMessage);
 		continueLoop = myInput.getContinueLoop();
-		//myInput.GetInput(participant.message);
+		//if (GetAsyncKeyState(VK_TAB))
+		//{
+		//	myInput.GetInput(participant.message);
+		//
+		//}
 		//GetInput(participant.message);
 
 	}
