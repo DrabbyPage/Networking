@@ -39,7 +39,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 
 	// get the x and y int values for easy checking
 	int xPosInt = GivePositionXFromChar(xPos);
-	int yPosInt = GivePositionXFromChar(yPos);
+	int yPosInt = GivePositionYFromChar(yPos);
 
 	ShipData newShip;
 	newShip.sizeOfShip = newSizeOfShip;
@@ -58,6 +58,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				xPosInt = xPosInt - inFrontOfShipVal;
 				newPos.posX = newPos.posX - inFrontOfShipVal;
 				inFrontOfShipVal--;
+				newPos.posY = yPos;
 
 				// check to see that placement is not on another ship
 				for (int k = 0; k < currentAmountOfShips; k++)
@@ -74,12 +75,13 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 
 				// add the ship to the game board
 				fullGame.gameData[yPosInt][xPosInt] = '#';
+				newShip.tilePos.push_back(newPos);
 			}
 			else
 			{
 				xPosInt = xPosInt + i;
 				newPos.posX += i;
-				newShip.tilePos.push_back(newPos);
+				newPos.posY = yPos;
 
 				// check to see that placement is not on another ship
 				for (int k = 0; k < currentAmountOfShips; k++)
@@ -96,8 +98,8 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 
 				// add the ship to the game board
 				fullGame.gameData[yPosInt][xPosInt] = '#';
+				newShip.tilePos.push_back(newPos);
 			}
-			newPos.posY = yPos;
 		}
 		else
 		{
@@ -106,6 +108,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				newPos.posY = newPos.posY - inFrontOfShipVal;
 				yPosInt = yPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
+				newPos.posX = xPos;
 
 				// check to see that placement is not on another ship
 				for (int k = 0; k < currentAmountOfShips; k++)
@@ -122,12 +125,13 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 
 				// add the ship to the game board
 				fullGame.gameData[yPosInt][xPosInt] = '#';
+				newShip.tilePos.push_back(newPos);
 			}
 			else
 			{
 				newPos.posY += i;
 				yPosInt = yPosInt + i;
-				newShip.tilePos.push_back(newPos);
+				newPos.posX = xPos;
 
 				// check to see that placement is not on another ship
 				for (int k = 0; k < currentAmountOfShips; k++)
@@ -144,8 +148,8 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 
 				// add the ship to the game board
 				fullGame.gameData[yPosInt][xPosInt] = '#';
+				newShip.tilePos.push_back(newPos);
 			}
-			newPos.posX = xPos;
 		}
 	}
 
