@@ -41,6 +41,17 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 	int xPosInt = GivePositionXFromChar(xPos);
 	int yPosInt = GivePositionYFromChar(yPos);
 
+	if (xPosInt == -1)
+	{
+		std::cout << "\nInvalid input for the X Value\n";
+		return;
+	}
+	if (yPosInt == -1)
+	{
+		std::cout << "\nInvalid input for the Y Value\n";
+		return;
+	}
+
 	ShipData newShip;
 	newShip.sizeOfShip = newSizeOfShip;
 	newShip.isSunk = false;
