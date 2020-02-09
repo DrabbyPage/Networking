@@ -55,8 +55,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 			if (xPosInt + i >= 10)
 			{
 				//put the position in front of the place location
-				xPosInt = xPosInt - inFrontOfShipVal;
-				newPos.posX = newPos.posX - inFrontOfShipVal;
+				newPos.posX = xPos - inFrontOfShipVal;
 				inFrontOfShipVal--;
 				newPos.posY = yPos;
 
@@ -74,13 +73,12 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				}
 
 				// add the ship to the game board
-				fullGame.gameData[yPosInt][xPosInt] = '#';
+				fullGame.gameData[yPosInt][xPosInt-inFrontOfShipVal] = '#';
 				newShip.tilePos.push_back(newPos);
 			}
 			else
 			{
-				xPosInt = xPosInt + i;
-				newPos.posX += i;
+				newPos.posX = xPos + i;
 				newPos.posY = yPos;
 
 				// check to see that placement is not on another ship
@@ -97,7 +95,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				}
 
 				// add the ship to the game board
-				fullGame.gameData[yPosInt][xPosInt] = '#';
+				fullGame.gameData[yPosInt][xPosInt+i] = '#';
 				newShip.tilePos.push_back(newPos);
 			}
 		}
@@ -105,8 +103,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 		{
 			if (yPosInt + i >= 10)
 			{
-				newPos.posY = newPos.posY - inFrontOfShipVal;
-				yPosInt = yPosInt - inFrontOfShipVal;
+				newPos.posY = yPos - inFrontOfShipVal;
 				inFrontOfShipVal--;
 				newPos.posX = xPos;
 
@@ -124,13 +121,12 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				}
 
 				// add the ship to the game board
-				fullGame.gameData[yPosInt][xPosInt] = '#';
+				fullGame.gameData[yPosInt-inFrontOfShipVal][xPosInt] = '#';
 				newShip.tilePos.push_back(newPos);
 			}
 			else
 			{
-				newPos.posY += i;
-				yPosInt = yPosInt + i;
+				newPos.posY = yPos + i;
 				newPos.posX = xPos;
 
 				// check to see that placement is not on another ship
@@ -147,7 +143,7 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 				}
 
 				// add the ship to the game board
-				fullGame.gameData[yPosInt][xPosInt] = '#';
+				fullGame.gameData[yPosInt + i][xPosInt] = '#';
 				newShip.tilePos.push_back(newPos);
 			}
 		}
