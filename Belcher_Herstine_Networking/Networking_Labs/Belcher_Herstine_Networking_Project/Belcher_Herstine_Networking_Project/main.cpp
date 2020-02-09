@@ -682,6 +682,8 @@ int main(void)
 
 				peer->Send((const char*)&hitOrMissTemp, sizeof(hitOrMissTemp), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
+				turnDone = false;
+
 				break;
 			}
 			case ID_RECEIVE_BATTLESHIP_FULL:
@@ -692,9 +694,18 @@ int main(void)
 			{
 				BattleshipHitOrMiss* temp = (BattleshipHitOrMiss*)packet->data;
 				
+				int shotXPos = GivePositionXFromChar(temp->xPos);
+				int shotYPos = GivePositionYFromChar(temp->yPos);
+
 				if (temp->hit)
 				{
-					std::cout << "\n You Hit A Ship!!!\n";
+					std::cout << "\nYou Hit A Ship!!!\n";
+					battleshipManager.GetPlayerShotInfo().gameData[shotYPos][shotXPos] = 'X';
+				}
+				else
+				{
+					std::cout << "\nYou Missed\n";
+					battleshipManager.GetPlayerShotInfo().gameData[shotYPos][shotXPos] = 'O';
 				}
 
 				break;
@@ -1150,6 +1161,8 @@ int main(void)
 						BattleshipShotData newShot;
 						newShot.xPos = newXPos[0];
 						newShot.yPos = newYPos[0];
+
+						newShot.typeId = ID_RECEIVE_BATTLESHIP_SHOT;
 
 						//send the info
 						peer->Send((const char*)&newShot, sizeof(newShot), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);

@@ -31,6 +31,8 @@ struct BattleshipHitOrMiss
 {
 	unsigned char typeId;
 	bool hit;
+	char xPos;
+	char yPos;
 };
 #pragma pack(pop)
 
