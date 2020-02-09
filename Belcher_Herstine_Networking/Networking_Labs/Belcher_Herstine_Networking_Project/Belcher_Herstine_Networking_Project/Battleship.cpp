@@ -55,7 +55,8 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 			if (xPosInt + i >= 10)
 			{
 				//put the position in front of the place location
-				newPos.posX = xPosInt - inFrontOfShipVal;
+				xPosInt = xPosInt - inFrontOfShipVal;
+				newPos.posX = newPos.posX - inFrontOfShipVal;
 				inFrontOfShipVal--;
 
 				// check to see that placement is not on another ship
@@ -70,9 +71,13 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 						}
 					}
 				}
+
+				// add the ship to the game board
+				fullGame.gameData[yPosInt][xPosInt] = '#';
 			}
 			else
 			{
+				xPosInt = xPosInt + i;
 				newPos.posX += i;
 				newShip.tilePos.push_back(newPos);
 
@@ -88,6 +93,9 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 						}
 					}
 				}
+
+				// add the ship to the game board
+				fullGame.gameData[yPosInt][xPosInt] = '#';
 			}
 			newPos.posY = yPos;
 		}
@@ -95,7 +103,8 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 		{
 			if (yPosInt + i >= 10)
 			{
-				newPos.posY = yPosInt - inFrontOfShipVal;
+				newPos.posY = newPos.posY - inFrontOfShipVal;
+				yPosInt = yPosInt - inFrontOfShipVal;
 				inFrontOfShipVal--;
 
 				// check to see that placement is not on another ship
@@ -110,10 +119,14 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 						}
 					}
 				}
+
+				// add the ship to the game board
+				fullGame.gameData[yPosInt][xPosInt] = '#';
 			}
 			else
 			{
 				newPos.posY += i;
+				yPosInt = yPosInt + i;
 				newShip.tilePos.push_back(newPos);
 
 				// check to see that placement is not on another ship
@@ -128,24 +141,15 @@ void BattleshipManager::AddShip(char xPos, char yPos, bool isHorizontal, int new
 						}
 					}
 				}
+
+				// add the ship to the game board
+				fullGame.gameData[yPosInt][xPosInt] = '#';
 			}
 			newPos.posX = xPos;
 		}
 	}
 
 	listOfShips[currentAmountOfShips] = newShip;
-
-	int posXOfShip;
-	int posYOfShip;
-	// go through each list of ship point... fill the pos of ships
-	for (int i = 0; i < newShip.sizeOfShip; i++)
-	{
-		posXOfShip = GivePositionXFromChar(newShip.tilePos.at(i).posX);
-
-		posYOfShip = GivePositionYFromChar(newShip.tilePos.at(i).posY);
-
-		fullGame.gameData[posYOfShip][posXOfShip] = '#';
-	}
 
 	currentAmountOfShips++;
 
