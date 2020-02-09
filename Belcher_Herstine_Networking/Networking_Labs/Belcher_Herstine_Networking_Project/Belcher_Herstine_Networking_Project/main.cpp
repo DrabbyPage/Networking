@@ -1132,15 +1132,31 @@ int main(void)
 				{
 					// make a shot move
 					// ask for posx
+					char newXPos[1];
+					// ask for placement X
+					std::printf("\nPlease enter your shot's X position: \n");
+					fgets(newXPos, 512, stdin);
 
 					// ask for posy 
+					char newYPos[1];
+					// ask for placement X
+					std::printf("\nPlease enter your shot's X position: \n");
+					fgets(newYPos, 512, stdin);
 
-					// add data to the a container
-					BattleshipShotData newShot;
-					newShot.xPos = /*insert info*/ 0;
-					newShot.yPos = /*insert info*/ 0;
-					
-					//send the info
+					// if invalid shot pos
+					if (GivePositionXFromChar(newXPos[0]) != -1 || GivePositionYFromChar(newYPos[0]) != -1)
+					{
+						// add data to the a container
+						BattleshipShotData newShot;
+						newShot.xPos = newXPos[0];
+						newShot.yPos = newYPos[0];
+
+						//send the info
+						peer->Send((const char*)&newShot, sizeof(newShot), HIGH_PRIORITY, RELIABLE_ORDERED, 0, listOfParticipantAddress[0], false);
+
+						turnDone = true;
+
+					}
 
 				}
 				
