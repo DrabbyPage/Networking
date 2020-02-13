@@ -38,6 +38,38 @@
 
 
 //-----------------------------------------------------------------------------
+// networking stuff
+
+void a3demo_startNetworking(a3_DemoState* demoState, a3boolean const isServer)
+{
+	a3netAddressStr const ipAddress = "127.0.0.1";
+	a3ui16 const port_server = 60006;
+	a3ui16 const port_client = 60005;
+	a3ui16 const maxConnections_server = 16;
+	a3ui16 const maxConnections_client = 1;
+
+	if (isServer)
+	{
+		if (a3netStartup(demoState->net, port_server, 0, maxConnections_server, 0) > 0)
+			printf("\n STARTED NETWORKING AS SERVER \n");
+	}
+	else
+	{
+		if (a3netStartup(demoState->net, 0, port_server, 0, maxConnections_client) > 0)
+			if (a3netConnect(demoState->net, ipAddress) > 0)
+				printf("\n STARTED NETWORKING AS CLIENT \n");
+	}
+}
+
+void a3demo_stopNetworking(a3_DemoState* demoState)
+{
+	if (a3netDisconnect(demoState->net) > 0)
+		if (a3netShutdown(demoState->net) > 0)
+			printf("\n SHUT DOWN NETWORKING \n");
+}
+
+
+//-----------------------------------------------------------------------------
 // miscellaneous functions
 
 // get the size of the persistent state to allocate
@@ -166,14 +198,14 @@ A3DYLIBSYMBOL a3_DemoState *a3demoCB_load(a3_DemoState *demoState, a3boolean hot
 	// do any re-allocation tasks
 	if (demoState && hotbuild)
 	{
-		const a3ui32 stateSize = a3demo_getPersistentStateSize();
-		a3_DemoState copy = *demoState;
+	//	const a3ui32 stateSize = a3demo_getPersistentStateSize();
+	//	a3_DemoState copy = *demoState;
 
 		// example 1: copy memory directly
-		free(demoState);
-		demoState = (a3_DemoState *)malloc(stateSize);
-		memset(demoState, 0, stateSize);
-		*demoState = copy;
+	//	free(demoState);
+	//	demoState = (a3_DemoState *)malloc(stateSize);
+	//	memset(demoState, 0, stateSize);
+	//	*demoState = copy;
 
 		// call refresh to re-link pointers in case demo state address changed
 		a3demo_refresh(demoState);
@@ -182,12 +214,11 @@ A3DYLIBSYMBOL a3_DemoState *a3demoCB_load(a3_DemoState *demoState, a3boolean hot
 	}
 
 	// do any initial allocation tasks
-	else
+	else if (demoState = (a3_DemoState*)malloc(stateSize))
 	{
 		// HEAP allocate persistent state
 		// stack object will be deleted at the end of the function
 		// good idea to set the whole block of memory to zero
-		demoState = (a3_DemoState *)malloc(stateSize);
 		memset(demoState, 0, stateSize);
 
 		// set up trig table (A3DM)
@@ -257,6 +288,9 @@ A3DYLIBSYMBOL a3_DemoState *a3demoCB_unload(a3_DemoState *demoState, a3boolean h
 		// erase other stuff
 		a3trigFree();
 
+		// networking
+		a3demo_stopNetworking(demoState);
+
 		// erase persistent state
 		free(demoState);
 		demoState = 0;
@@ -284,8 +318,10 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(a3_DemoState *demoState)
 		if (a3timerUpdate(demoState->renderTimer) > 0)
 		{
 			// render timer ticked, update demo state and draw
-			a3demo_update(demoState, demoState->renderTimer->secondsPerTick);
 			a3demo_input(demoState, demoState->renderTimer->secondsPerTick);
+			a3netProcessInbound(demoState->net);
+			a3demo_update(demoState, demoState->renderTimer->secondsPerTick);
+			a3netProcessOutbound(demoState->net);
 			a3demo_render(demoState);
 
 			// update input
@@ -412,6 +448,23 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(a3_DemoState *demoState, a3i32 asciiKey
 //	case 27: 
 //		demoState->exitFlag = 1;
 //		break;
+
+
+		// stop networking
+	case '0':
+		a3demo_stopNetworking(demoState);
+		break;
+
+		// start networking as server
+	case '1':
+		a3demo_startNetworking(demoState, 1);
+		break;
+
+		// start networking as client
+	case '2':
+		a3demo_startNetworking(demoState, 0);
+		break;
+
 
 		// reload (T) or toggle (t) text
 	case 'T':

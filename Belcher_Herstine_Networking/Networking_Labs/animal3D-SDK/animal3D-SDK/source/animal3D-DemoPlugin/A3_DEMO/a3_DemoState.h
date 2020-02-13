@@ -43,6 +43,8 @@
 #include "_utilities/a3_DemoSceneObject.h"
 #include "_utilities/a3_DemoShaderProgram.h"
 
+#include "a3_NetworkingManager.h"
+
 
 //-----------------------------------------------------------------------------
 
@@ -150,6 +152,10 @@ extern "C"
 
 		// cameras
 		a3ui32 activeCamera;
+
+
+		// networking
+		a3_NetworkingManager net[1];
 
 
 		//---------------------------------------------------------------------
